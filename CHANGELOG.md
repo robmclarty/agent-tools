@@ -6,6 +6,11 @@ This project uses [Semantic Versioning](https://semver.org/). The version tracks
 the catalog itself — each listed plugin is versioned independently in its own
 repository or npm package.
 
+## 0.1.2
+
+- Rename the catalog repo to `agent-tools` and update the README install command; name is deliberately agent-agnostic for future multi-agent support
+- Add a sunrise banner image to the README
+
 ## 0.1.1
 
 - Correct `plumbbob` source from github to npm (it ships a compiled CLI)
