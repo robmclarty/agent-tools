@@ -1,0 +1,28 @@
+name: validate
+
+on:
+  push:
+    paths:
+      - ".claude-plugin/marketplace.json"
+      - "scripts/validate-marketplace.sh"
+      - ".github/workflows/validate.yml"
+  pull_request:
+    paths:
+      - ".claude-plugin/marketplace.json"
+      - "scripts/validate-marketplace.sh"
+      - ".github/workflows/validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # jq and curl are preinstalled on ubuntu-latest.
+      - name: Validate marketplace catalog (structure + source reachability)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/validate-marketplace.sh --check-sources
