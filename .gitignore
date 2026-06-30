@@ -1,0 +1,14 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.zed/
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# AI — keep .claude/skills tracked, ignore only local settings
+.claude/settings.local.json

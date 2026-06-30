@@ -1,0 +1,33 @@
+{
+  "name": "robmclarty",
+  "owner": {
+    "name": "Rob McLarty",
+    "email": "hello@robmclarty.com"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by Rob McLarty.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "plumbbob",
+      "source": { "source": "github", "repo": "robmclarty/plumbbob" },
+      "description": "Attention-first build process — driver skills + a CLI that keep you the decider; guidance, not enforcement.",
+      "license": "Apache-2.0",
+      "category": "development",
+      "keywords": ["claude-code", "claude", "hooks", "cli", "agent", "attention-first"],
+      "homepage": "https://github.com/robmclarty/plumbbob",
+      "repository": "https://github.com/robmclarty/plumbbob"
+    },
+    {
+      "name": "trellis",
+      "source": { "source": "github", "repo": "robmclarty/trellis" },
+      "description": "A spec-driven development toolkit that takes features from problem framing through implementation using structured, composable skills.",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["spec", "specification", "planning", "implementation", "compliance", "tasks", "shape-up", "pipeline", "development-workflow"],
+      "homepage": "https://github.com/robmclarty/trellis",
+      "repository": "https://github.com/robmclarty/trellis"
+    }
+  ]
+}
