@@ -1,15 +1,18 @@
-# robmclarty/claude-marketplace
+# robmclarty/agent-tools
 
 A Claude Code plugin marketplace for [Rob McLarty](https://robmclarty.com)'s tools.
 It's a catalog only — each plugin lives in (and is versioned by) its own
 repository or npm package; this repo just lists them.
+
+It's a Claude Code marketplace today; the name is deliberately agent-agnostic so
+the catalog can grow to cover tools for other agents later.
 
 ## Install
 
 Add the marketplace once, then install whichever plugins you want:
 
 ```shell
-/plugin marketplace add robmclarty/claude-marketplace
+/plugin marketplace add robmclarty/agent-tools
 /plugin install plumbbob@robmclarty
 /plugin install trellis@robmclarty
 ```
