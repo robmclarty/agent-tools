@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "plumbbob",
-      "source": { "source": "github", "repo": "robmclarty/plumbbob" },
+      "source": { "source": "npm", "package": "plumbbob" },
       "description": "Attention-first build process — driver skills + a CLI that keep you the decider; guidance, not enforcement.",
       "license": "Apache-2.0",
       "category": "development",
