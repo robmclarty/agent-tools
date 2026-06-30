@@ -1,5 +1,7 @@
 # robmclarty/agent-tools
 
+![Sunrise over an island silhouette across the water](sunrise.jpg)
+
 A Claude Code plugin marketplace for [Rob McLarty](https://robmclarty.com)'s tools.
 It's a catalog only — each plugin lives in (and is versioned by) its own
 repository or npm package; this repo just lists them.
