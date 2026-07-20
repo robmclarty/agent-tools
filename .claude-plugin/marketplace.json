@@ -6,26 +6,49 @@
   },
   "metadata": {
     "description": "Claude Code plugins by Rob McLarty.",
-    "version": "0.1.2"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "plumbbob",
-      "source": { "source": "npm", "package": "plumbbob" },
+      "source": {
+        "source": "npm",
+        "package": "plumbbob"
+      },
       "description": "Attention-first build process — driver skills + a CLI that keep you the decider; guidance, not enforcement.",
       "license": "Apache-2.0",
       "category": "development",
-      "keywords": ["claude-code", "claude", "hooks", "cli", "agent", "attention-first"],
+      "keywords": [
+        "claude-code",
+        "claude",
+        "hooks",
+        "cli",
+        "agent",
+        "attention-first"
+      ],
       "homepage": "https://github.com/robmclarty/plumbbob",
       "repository": "https://github.com/robmclarty/plumbbob"
     },
     {
       "name": "trellis",
-      "source": { "source": "github", "repo": "robmclarty/trellis" },
+      "source": {
+        "source": "github",
+        "repo": "robmclarty/trellis"
+      },
       "description": "A spec-driven development toolkit that takes features from problem framing through implementation using structured, composable skills.",
       "license": "MIT",
       "category": "development",
-      "keywords": ["spec", "specification", "planning", "implementation", "compliance", "tasks", "shape-up", "pipeline", "development-workflow"],
+      "keywords": [
+        "spec",
+        "specification",
+        "planning",
+        "implementation",
+        "compliance",
+        "tasks",
+        "shape-up",
+        "pipeline",
+        "development-workflow"
+      ],
       "homepage": "https://github.com/robmclarty/trellis",
       "repository": "https://github.com/robmclarty/trellis"
     },
@@ -35,7 +58,15 @@
       "description": "Portable /version release skill — a deterministic, config-driven bump engine plus one invariant workflow that adapts to any repo via .claude/version.json.",
       "license": "MIT",
       "category": "development",
-      "keywords": ["version", "semver", "release", "changelog", "bump", "monorepo", "lockstep"],
+      "keywords": [
+        "version",
+        "semver",
+        "release",
+        "changelog",
+        "bump",
+        "monorepo",
+        "lockstep"
+      ],
       "homepage": "https://github.com/robmclarty/agent-tools",
       "repository": "https://github.com/robmclarty/agent-tools"
     },
@@ -45,7 +76,13 @@
       "description": "Conventional commits with TIL extraction for code-diary — a deterministic never-stage filter script plus a one-tool-call /commit skill.",
       "license": "MIT",
       "category": "development",
-      "keywords": ["commit", "conventional-commits", "til", "code-diary", "git"],
+      "keywords": [
+        "commit",
+        "conventional-commits",
+        "til",
+        "code-diary",
+        "git"
+      ],
       "homepage": "https://github.com/robmclarty/agent-tools",
       "repository": "https://github.com/robmclarty/agent-tools"
     }
