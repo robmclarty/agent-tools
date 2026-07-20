@@ -6,6 +6,11 @@ This project uses [Semantic Versioning](https://semver.org/). The version tracks
 the catalog itself — each listed plugin is versioned independently in its own
 repository or npm package.
 
+## 0.3.0
+
+- Remove the deprecated `trellis` plugin (superseded by ridgeline, which is a standalone CLI rather than a Claude Code plugin)
+- Add per-plugin READMEs for `version` and `commit-with-til`
+
 ## 0.2.0
 
 - Add `version` plugin — a portable, config-driven `/version` release skill hosted in this repo under `plugins/version`
