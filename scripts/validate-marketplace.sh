@@ -5,9 +5,12 @@
 # Catches the failures a generic JSON linter misses: malformed JSON *and*
 # semantic problems (missing required keys, unknown source types, source
 # objects missing their companion field). With --check-sources it also
-# verifies each plugin's source is actually reachable.
+# verifies each plugin's source is reachable *and actually a plugin* — the
+# referenced repo/package/dir must carry a .claude-plugin/plugin.json.
+# (Reachability alone is not enough: a package can exist on npm yet be a
+# plain CLI with no plugin manifest, which would fail to install.)
 #
-# Dependencies: jq (required). curl (only for --check-sources).
+# Dependencies: jq (required). curl and tar (only for --check-sources).
 #
 # Usage:
 #   scripts/validate-marketplace.sh                 # offline structural checks
@@ -77,9 +80,13 @@ while IFS=$'\t' read -r name path; do
   echo "  ok  $name -> $path (local plugin manifest + skills present)"
 done < <(jq -r '.plugins[] | select(.source | type == "string") | [.name, .source] | @tsv' "$MANIFEST")
 
-# 3. Reachability (opt-in) — confirm each plugin source actually resolves.
+# 3. Reachability + plugin validity (opt-in) — confirm each remote source
+#    resolves AND carries a .claude-plugin/plugin.json. A reachable package
+#    that isn't a plugin (e.g. a plain CLI on npm) is a FAIL, not an ok:
+#    `/plugin install` would find no manifest.
 if [ "$CHECK_SOURCES" -eq 1 ]; then
   command -v curl >/dev/null 2>&1 || fail "--check-sources needs curl"
+  command -v tar >/dev/null 2>&1 || fail "--check-sources needs tar (npm plugin validity)"
   token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
   rc=0
 
@@ -88,17 +95,27 @@ if [ "$CHECK_SOURCES" -eq 1 ]; then
       github)
         hdr=(-H "Accept: application/vnd.github+json")
         [ -n "$token" ] && hdr+=(-H "Authorization: Bearer $token")
-        if curl -sf "${hdr[@]}" "https://api.github.com/repos/$ref" >/dev/null; then
-          echo "  ok  $name -> github:$ref"
-        else
+        if ! curl -sf "${hdr[@]}" "https://api.github.com/repos/$ref" >/dev/null; then
           echo "  ERR $name -> github:$ref unreachable" >&2; rc=1
+        elif curl -sf "${hdr[@]}" "https://api.github.com/repos/$ref/contents/.claude-plugin/plugin.json" >/dev/null; then
+          echo "  ok  $name -> github:$ref (plugin manifest present)"
+        else
+          echo "  ERR $name -> github:$ref is reachable but has no .claude-plugin/plugin.json (not a plugin)" >&2; rc=1
         fi
         ;;
       npm)
-        if curl -sf "https://registry.npmjs.org/$ref" >/dev/null; then
-          echo "  ok  $name -> npm:$ref"
-        else
+        meta="$(curl -sf "https://registry.npmjs.org/$ref" || true)"
+        if [ -z "$meta" ]; then
           echo "  ERR $name -> npm:$ref not found on registry" >&2; rc=1
+        else
+          tarball="$(printf '%s' "$meta" | jq -r '.versions[.["dist-tags"].latest].dist.tarball // empty')"
+          # npm tarballs prefix every path with `package/`.
+          listing="$([ -n "$tarball" ] && curl -sfL "$tarball" | tar -tzf - 2>/dev/null || true)"
+          if printf '%s\n' "$listing" | grep -q '^package/\.claude-plugin/plugin\.json$'; then
+            echo "  ok  $name -> npm:$ref (plugin manifest present)"
+          else
+            echo "  ERR $name -> npm:$ref is on the registry but ships no .claude-plugin/plugin.json (not a plugin)" >&2; rc=1
+          fi
         fi
         ;;
       *)
@@ -107,6 +124,6 @@ if [ "$CHECK_SOURCES" -eq 1 ]; then
     esac
   done < <(jq -r '.plugins[] | [.name] + (.source | if type == "string" then ["path", .] else [.source, (.repo // .package // .url // "")] end) | @tsv' "$MANIFEST")
 
-  [ "$rc" -eq 0 ] || fail "one or more plugin sources were unreachable"
-  echo "OK: all plugin sources reachable"
+  [ "$rc" -eq 0 ] || fail "one or more plugin sources were unreachable or are not valid plugins"
+  echo "OK: all plugin sources reachable and carry a plugin manifest"
 fi
