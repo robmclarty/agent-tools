@@ -43,7 +43,10 @@ errors="$(jq -r '
          | (($p.name // "<unnamed>") as $n
             | (["name","source","description"]
                | map(. as $k | select($p | has($k) | not) | "plugin \($n): missing key \($k)"))
-            + (if ($p.source | type) != "object" then ["plugin \($n): source is not an object"]
+            + (if ($p.source | type) == "string" then
+                 (if ($p.source | startswith("./")) then []
+                  else ["plugin \($n): string source must be a relative path starting with ./"] end)
+               elif ($p.source | type) != "object" then ["plugin \($n): source is not an object or relative path string"]
                elif ($p.source | has("source") | not) then ["plugin \($n): source.source missing"]
                elif (["github","npm","git","local"] | index($p.source.source)) == null
                  then ["plugin \($n): invalid source type \($p.source.source) (expected github|npm|git|local)"]
@@ -62,6 +65,17 @@ if [ -n "$errors" ]; then
 fi
 
 echo "OK: $MANIFEST is valid JSON and structurally sound ($(jq '.plugins | length' "$MANIFEST") plugins)"
+
+# 2.5. Local plugins — a relative-path source must exist in this repo and carry
+# a valid plugin manifest. This is offline (the plugin ships with the repo).
+while IFS=$'\t' read -r name path; do
+  [ -n "$name" ] || continue
+  manifest="$path/.claude-plugin/plugin.json"
+  [ -f "$manifest" ] || fail "plugin $name: $manifest not found"
+  jq empty "$manifest" 2>/dev/null || fail "plugin $name: $manifest is not valid JSON"
+  [ -d "$path/skills" ] || fail "plugin $name: $path/skills/ not found"
+  echo "  ok  $name -> $path (local plugin manifest + skills present)"
+done < <(jq -r '.plugins[] | select(.source | type == "string") | [.name, .source] | @tsv' "$MANIFEST")
 
 # 3. Reachability (opt-in) — confirm each plugin source actually resolves.
 if [ "$CHECK_SOURCES" -eq 1 ]; then
@@ -91,7 +105,7 @@ if [ "$CHECK_SOURCES" -eq 1 ]; then
         echo "  skip $name -> $kind:$ref (no reachability probe for this source type)"
         ;;
     esac
-  done < <(jq -r '.plugins[] | [.name, .source.source, (.source.repo // .source.package // .source.url // "")] | @tsv' "$MANIFEST")
+  done < <(jq -r '.plugins[] | [.name] + (.source | if type == "string" then ["path", .] else [.source, (.repo // .package // .url // "")] end) | @tsv' "$MANIFEST")
 
   [ "$rc" -eq 0 ] || fail "one or more plugin sources were unreachable"
   echo "OK: all plugin sources reachable"

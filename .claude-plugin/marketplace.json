@@ -28,6 +28,26 @@
       "keywords": ["spec", "specification", "planning", "implementation", "compliance", "tasks", "shape-up", "pipeline", "development-workflow"],
       "homepage": "https://github.com/robmclarty/trellis",
       "repository": "https://github.com/robmclarty/trellis"
+    },
+    {
+      "name": "version",
+      "source": "./plugins/version",
+      "description": "Portable /version release skill — a deterministic, config-driven bump engine plus one invariant workflow that adapts to any repo via .claude/version.json.",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["version", "semver", "release", "changelog", "bump", "monorepo", "lockstep"],
+      "homepage": "https://github.com/robmclarty/agent-tools",
+      "repository": "https://github.com/robmclarty/agent-tools"
+    },
+    {
+      "name": "commit-with-til",
+      "source": "./plugins/commit-with-til",
+      "description": "Conventional commits with TIL extraction for code-diary — a deterministic never-stage filter script plus a one-tool-call /commit skill.",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["commit", "conventional-commits", "til", "code-diary", "git"],
+      "homepage": "https://github.com/robmclarty/agent-tools",
+      "repository": "https://github.com/robmclarty/agent-tools"
     }
   ]
 }

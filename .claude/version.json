@@ -1,0 +1,18 @@
+{
+  "targets": [
+    { "type": "json", "path": ".claude-plugin/marketplace.json", "key": "metadata.version" }
+  ],
+  "marker": {
+    "commit": "v{version}"
+  },
+  "changelog": {
+    "path": "CHANGELOG.md",
+    "style": "flat"
+  },
+  "verify": null,
+  "publish": {
+    "pushTag": false,
+    "pushBranch": false,
+    "confirm": false
+  }
+}

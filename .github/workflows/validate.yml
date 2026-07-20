@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - ".claude-plugin/marketplace.json"
+      - "plugins/**"
       - "scripts/validate-marketplace.sh"
       - ".github/workflows/validate.yml"
   pull_request:
     paths:
       - ".claude-plugin/marketplace.json"
+      - "plugins/**"
       - "scripts/validate-marketplace.sh"
       - ".github/workflows/validate.yml"
   workflow_dispatch:

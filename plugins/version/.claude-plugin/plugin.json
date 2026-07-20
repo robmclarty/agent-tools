@@ -1,0 +1,23 @@
+{
+  "name": "version",
+  "version": "0.1.0",
+  "description": "Portable /version release skill — a deterministic, config-driven bump engine plus one invariant workflow that adapts to any repo via .claude/version.json.",
+  "author": {
+    "name": "Rob McLarty",
+    "email": "hello@robmclarty.com",
+    "url": "https://robmclarty.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "version",
+    "semver",
+    "release",
+    "changelog",
+    "bump",
+    "monorepo",
+    "lockstep",
+    "claude-code"
+  ],
+  "homepage": "https://github.com/robmclarty/agent-tools",
+  "repository": "https://github.com/robmclarty/agent-tools"
+}

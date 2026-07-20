@@ -1,0 +1,62 @@
+// Example .claude/version.json — reference for `/version init` and hand-authoring.
+// The real config must be strict JSON (no comments). Every section except `targets`
+// is optional; the defaults shown are what the engine applies when a key is omitted.
+{
+  // Where versions live. The FIRST entry is authoritative — the version is read
+  // from it. Every other entry is force-written to the new version on each bump
+  // (self-healing: a lagging secondary file gets fixed and reported, not fatal).
+  "targets": [
+    // JSON file, dot-path key. Covers package.json, plugin.json ("version"),
+    // marketplace.json ("metadata.version"), deno.json, composer.json, …
+    { "type": "json", "path": "package.json", "key": "version" },
+    // Literal line containing exactly one {semver} placeholder. Covers an Odin
+    // `VERSION :: "1.2.3"`, Python `__version__ = "1.2.3"`, C `#define`, …
+    { "type": "regex", "path": "src/main.odin", "match": "VERSION :: \"{semver}\"" }
+  ],
+
+  // Optional: glob rules whose matches join the lockstep set (monorepos).
+  // A discovered file that exists but doesn't match its pattern fails loudly —
+  // existing declares intent to participate. `*` matches within one segment.
+  "discover": [
+    { "glob": "packages/*/package.json", "type": "json", "key": "version" },
+    { "glob": "packages/*/src/version.ts", "type": "regex", "match": "export const version = '{semver}';" }
+  ],
+
+  // Optional escape hatch for repos too bespoke for declarative targets: a
+  // repo-local script that receives the new version as $1, performs all writes,
+  // prints changed paths (one per line), exits non-zero on failure. targets[0]
+  // is still required as the read-only authoritative source; the engine still
+  // owns semver math, previous-release detection, and the JSON contract.
+  // "driver": "./scripts/bump-driver.sh",
+
+  // Release-marker convention. Drives BOTH the release commit message and how
+  // the engine finds the previous release (the changelog range boundary).
+  "marker": {
+    "commit": "v{version}",            // default; e.g. "chore: release {version}"
+    "tag": false,                      // create + (per publish) push an annotated v-tag
+    "tagAuthoritative": false,         // true: tags, not commit messages, mark releases
+    "legacy": []                       // older message conventions still in history,
+                                       // e.g. ["chore: bump version to {version}"]
+  },
+
+  "changelog": {
+    "path": "CHANGELOG.md",            // default
+    "style": "sections",               // "sections" | "keep-a-changelog" | "flat"
+    "linkRef": null                    // keep-a-changelog link refs, e.g.
+                                       // "https://www.npmjs.com/package/foo/v/{version}"
+  },
+
+  // Narrow verify command run on the (version + changelog) diff before staging —
+  // only what that diff can actually break (markdown lint, spelling). null = none.
+  "verify": null,
+
+  "publish": {
+    "pushTag": false,                  // git push origin vX.Y.Z after tagging
+    "pushBranch": false,               // git push origin HEAD
+    "confirm": false                   // ask first (set true when a push triggers CI
+                                       // machinery like an npm publish)
+  }
+}
+// Repo-specific workflow prose the config can't express (CI approval gates, why
+// verify is intentionally null, …) goes in .claude/version.md — the skill reads
+// it automatically when present.
