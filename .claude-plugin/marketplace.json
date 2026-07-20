@@ -30,29 +30,6 @@
       "repository": "https://github.com/robmclarty/plumbbob"
     },
     {
-      "name": "trellis",
-      "source": {
-        "source": "github",
-        "repo": "robmclarty/trellis"
-      },
-      "description": "A spec-driven development toolkit that takes features from problem framing through implementation using structured, composable skills.",
-      "license": "MIT",
-      "category": "development",
-      "keywords": [
-        "spec",
-        "specification",
-        "planning",
-        "implementation",
-        "compliance",
-        "tasks",
-        "shape-up",
-        "pipeline",
-        "development-workflow"
-      ],
-      "homepage": "https://github.com/robmclarty/trellis",
-      "repository": "https://github.com/robmclarty/trellis"
-    },
-    {
       "name": "version",
       "source": "./plugins/version",
       "description": "Portable /version release skill — a deterministic, config-driven bump engine plus one invariant workflow that adapts to any repo via .claude/version.json.",

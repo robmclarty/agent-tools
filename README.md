@@ -17,7 +17,6 @@ Add the marketplace once, then install whichever plugins you want:
 ```shell
 /plugin marketplace add robmclarty/agent-tools
 /plugin install plumbbob@robmclarty
-/plugin install trellis@robmclarty
 /plugin install version@robmclarty
 /plugin install commit-with-til@robmclarty
 ```
@@ -27,7 +26,6 @@ Add the marketplace once, then install whichever plugins you want:
 | Plugin | Source | Description |
 |--------|--------|-------------|
 | `plumbbob` | npm (`plumbbob`) | Attention-first build process — driver skills + a CLI that keep you the decider; guidance, not enforcement. |
-| `trellis` | github (`robmclarty/trellis`) | A spec-driven development toolkit that takes features from problem framing through implementation using structured, composable skills. |
 | `version` | this repo (`plugins/version`) | Portable `/version` release skill — a deterministic, config-driven bump engine plus one invariant workflow that adapts to any repo via `.claude/version.json`. Run `/version init` once per repo to generate the config. |
 | `commit-with-til` | this repo (`plugins/commit-with-til`) | Conventional commits with TIL extraction for code-diary — a deterministic never-stage filter script plus a one-tool-call `/commit` skill. |
 
