@@ -12,3 +12,5 @@ Thumbs.db
 
 # AI — keep .claude/skills tracked, ignore only local settings
 .claude/settings.local.json
+
+research/
