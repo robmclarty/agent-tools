@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** none (at the boundary)
+**Current step:** 1 — chore(check): add a repo check command over validation and script tests
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -23,7 +23,20 @@ step boundaries. The antidote to "my plan got lost in the noise."
 line above. Only ONE step is in flight; a step is done only after a checkpoint —
 check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 
-- ☐ 1. <step>
+- ☐ 1. chore(check): add a repo check command over validation and script tests
+- ☐ 2. spike(hooks): verify prompt-hook and paths-frontmatter support
+- ☐ 3. feat: add plugin manifest, config resolver, and marketplace entry
+- ☐ 4. feat: add the shared rules-inventory and scan core
+- ☐ 5. feat: add the scratch-repo test harness
+- ☐ 6. feat: add /init to generate config and bootstrap sgconfig
+- ☐ 7. feat: add /rule to scaffold and verify a new rule
+- ☐ 8. feat: add /audit to find conventions no rule enforces
+- ☐ 9. feat: add /lesson to record a friction entry
+- ☐ 10. feat: add a PostToolUse hook as the friction trigger
+- ☐ 11. feat: add /mine to classify and route lesson candidates
+- ☐ 12. feat: add the opt-in starter rulesets
+- ☐ 13. docs: add the plugin README and root marketplace table row
+- ☐ 14. chore: verify both loops end to end in a throwaway repo
 
 ## Park list
 

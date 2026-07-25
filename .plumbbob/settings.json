@@ -1,1 +1,1 @@
-{"check": "bash scripts/validate-marketplace.sh"}
+{"check": "bash scripts/check.sh"}
