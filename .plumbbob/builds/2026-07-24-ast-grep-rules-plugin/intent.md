@@ -264,7 +264,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `scripts/check.sh`, `.plumbbob/settings.json`, `.github/workflows/validate.yml`
    - model: sonnet — mechanical; wraps an existing script and globs for `node --test` files
 
-2. [ ] spike(hooks): verify prompt-hook and paths-frontmatter support — **done when:** the build log records, for each, whether it works and what its contract is: does `PostToolUse` accept `type: "prompt"`, what reaches the user versus the model, and does `paths:` gate skill activation — each confirmed by a live fire from a throwaway plugin install, not from docs alone; D19's fallback is explicitly discharged or adopted
+2. [x] spike(hooks): verify prompt-hook and paths-frontmatter support — **done when:** the build log records, for each, whether it works and what its contract is: does `PostToolUse` accept `type: "prompt"`, what reaches the user versus the model, and does `paths:` gate skill activation — each confirmed by a live fire from a throwaway plugin install, not from docs alone; D19's fallback is explicitly discharged or adopted
    - seam: `.plumbbob/builds/2026-07-24-ast-grep-rules-plugin/build-log.md`
    - model: opus — unattested territory, and the fallback shape is a design call D8/D12 depend on
 

@@ -1,0 +1,35 @@
+// Example .claude/ast-grep.json — reference for `/ast-grep-rules:init` and hand-authoring.
+// The real config must be strict JSON (no comments). Every key is optional; the values
+// shown are the defaults the resolver applies when a key is omitted, so an empty `{}` is
+// a valid config for a conventionally-laid-out repo.
+//
+// What is NOT here is the point: `rules_dir`, `utils_dir`, `tests_dir` and `snapshot_dir`
+// are read from the repo's own sgconfig.yml and never restated here. ast-grep already owns
+// that mapping; duplicating a path that genuinely varies across repos only invites skew.
+// Run `node scripts/config.mjs` to see the resolved contract, sgconfig paths included.
+{
+  // Path to the repo's sgconfig.yml, relative to the repo root. Paths *inside* that file
+  // are resolved relative to the file itself, not the root — so `.ast-grep/sgconfig.yml`
+  // declaring `ruleDirs: [./rules]` means `.ast-grep/rules/`, which is what ast-grep does.
+  "sgconfig": "sgconfig.yml",
+
+  // Append-only prose store for friction entries — what `/lesson` writes and `/mine` reads.
+  "lessons_path": "docs/lessons.md",
+
+  // The primary conventions doc `/audit` diffs against the enforced rule ids.
+  "conventions_path": "docs/conventions.md",
+
+  // Additional docs that state conventions worth enforcing — `/audit` reads these too,
+  // after `conventions_path`. Spec, constraints, and taste docs belong here.
+  "convention_docs": ["CLAUDE.md"],
+
+  // How to invoke ast-grep. It is a per-repo devDependency in every repo we've seen and is
+  // NOT on PATH, so this is a command prefix, not a binary name — arguments are appended.
+  // A bare "ast-grep" is fine if yours really is installed globally.
+  "ast_grep_command": "pnpm exec ast-grep",
+
+  // Optional repo-local rule scaffolder, e.g. "pnpm scaffold:ast-grep-rule". When set,
+  // `/rule` prefers it and passes the kebab-case rule id; when null, `/rule` writes the
+  // rule YAML and its `*-test.yml` fixture itself. Either way the fixture is required.
+  "scaffold_command": null
+}

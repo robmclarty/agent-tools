@@ -1,0 +1,4 @@
+# Layout B — ridgeline's shape, written in flow style: one rules dir at the root, no
+# utils, and no testConfigs at all. `ast-grep test` has nowhere to look, which the
+# resolver must warn about rather than invent a path for.
+ruleDirs: [rules]

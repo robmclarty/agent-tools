@@ -48,6 +48,23 @@
       "repository": "https://github.com/robmclarty/agent-tools"
     },
     {
+      "name": "ast-grep-rules",
+      "source": "./plugins/ast-grep-rules",
+      "description": "Adaptive structural lint for TypeScript — audit the conventions your docs state against the ast-grep rules you actually enforce, and turn recorded friction into new rules that ship with a passing test fixture.",
+      "license": "MIT",
+      "category": "development",
+      "keywords": [
+        "ast-grep",
+        "structural-lint",
+        "lint",
+        "conventions",
+        "rules",
+        "typescript"
+      ],
+      "homepage": "https://github.com/robmclarty/agent-tools",
+      "repository": "https://github.com/robmclarty/agent-tools"
+    },
+    {
       "name": "commit-with-til",
       "source": "./plugins/commit-with-til",
       "description": "Conventional commits with TIL extraction for code-diary — a deterministic never-stage filter script plus a one-tool-call /commit skill.",

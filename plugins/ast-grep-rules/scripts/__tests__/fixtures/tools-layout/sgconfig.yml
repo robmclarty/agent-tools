@@ -1,0 +1,11 @@
+# Layout A — the shape three of the four source repos share: rules under tools/,
+# a util dir, and a testConfigs entry that names its snapshot dir explicitly.
+ruleDirs:
+  - tools/ast-grep/rules
+
+utilDirs:
+  - tools/ast-grep/util
+
+testConfigs:
+  - testDir: tools/ast-grep/tests
+    snapshotDir: __snapshots__

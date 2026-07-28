@@ -1,0 +1,5 @@
+# sgconfig.yml need not sit at the repo root, and its paths are relative to *itself*:
+# `./rules` here means `.ast-grep/rules`, not `rules`. Resolving it against the root
+# instead would point every skill at a directory that does not exist.
+ruleDirs:
+  - ./rules

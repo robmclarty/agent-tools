@@ -1,0 +1,9 @@
+{
+  "lessons_path": "notes/friction.md",
+  "conventions_path": "docs/house-style.md",
+  "convention_docs": ["CLAUDE.md", "docs/spec.md"],
+  "ast_grep_command": "npx --no-install ast-grep",
+  "scaffold_command": "pnpm scaffold:ast-grep-rule",
+  "rules_dir": "rules",
+  "mine_threshold": 3
+}

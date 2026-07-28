@@ -1,0 +1,22 @@
+{
+  "name": "ast-grep-rules",
+  "version": "0.1.0",
+  "description": "Adaptive structural lint for TypeScript — audit the conventions your docs state against the ast-grep rules you actually enforce, and turn recorded friction into new rules that ship with a passing test fixture.",
+  "author": {
+    "name": "Rob McLarty",
+    "email": "hello@robmclarty.com",
+    "url": "https://robmclarty.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ast-grep",
+    "structural-lint",
+    "lint",
+    "conventions",
+    "rules",
+    "typescript",
+    "claude-code"
+  ],
+  "homepage": "https://github.com/robmclarty/agent-tools",
+  "repository": "https://github.com/robmclarty/agent-tools"
+}

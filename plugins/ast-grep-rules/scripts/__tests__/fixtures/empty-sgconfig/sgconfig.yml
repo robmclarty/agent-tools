@@ -1,0 +1,4 @@
+# A real sgconfig key this plugin never reads, and none of the ones it does. The
+# unknown key must be tolerated; the missing `ruleDirs` must not be papered over.
+languageGlobs:
+  html: ["*.vue"]

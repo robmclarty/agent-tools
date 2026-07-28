@@ -1,0 +1,6 @@
+# Layout C — everything under config/, with a testConfigs entry that omits
+# snapshotDir. ast-grep defaults it to __snapshots__ *inside* testDir, and so must we.
+ruleDirs:
+  - config/ast-grep/rules
+testConfigs:
+  - testDir: config/ast-grep/tests
