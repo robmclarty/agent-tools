@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 4 — feat: add the shared rules-inventory and scan core
+**Current step:** 5 — feat: add the scratch-repo test harness
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -26,7 +26,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 1. chore(check): add a repo check command over validation and script tests
 - ☑ 2. spike(hooks): verify prompt-hook and paths-frontmatter support
 - ☑ 3. feat: add plugin manifest, config resolver, and marketplace entry
-- ☐ 4. feat: add the shared rules-inventory and scan core
+- ☑ 4. feat: add the shared rules-inventory and scan core
 - ☐ 5. feat: add the scratch-repo test harness
 - ☐ 6. feat: add /init to generate config and bootstrap sgconfig
 - ☐ 7. feat: add /rule to scaffold and verify a new rule
@@ -44,6 +44,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 > go straight back to the step. Acting the instant an idea arrives is the disease.
 > Capture is one line (`/pb-park` composes it). Harvest happens only at the boundary.
 - [ ] step 5: pin @ast-grep/cli in a root private package.json vs. install per scratch repo — decide where the harness makes the cost visible; versioning needs no package.json (marketplace.json metadata.version is authoritative)
+- [ ] A local marketplace registers under the manifest's own name ('robmclarty' → source: directory, path: <abs>), which collides with the globally-registered github marketplace of the same name — so --plugin-dir is the residue-free way to load this plugin from a working tree. Worth a line in the step-13 README.
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -101,3 +102,4 @@ folder, so it rides the branch into the PR.)*
     instrument; the event stream alone yields a false negative.
 - 2026-07-28 — step 2 checkpointed · bf1b287d5 — spike(hooks): verify prompt-hook and paths-frontmatter support (5206m)
 - 2026-07-28 — step 3 checkpointed · ba57605f9 — feat: add plugin manifest, config resolver, and marketplace entry (1 drift, 22m)
+- 2026-07-28 — step 4 checkpointed · 9daee109b — feat: add the shared rules-inventory and scan core (62m)

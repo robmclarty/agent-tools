@@ -272,7 +272,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `plugins/ast-grep-rules/.claude-plugin/plugin.json`, `plugins/ast-grep-rules/scripts/config.mjs`, `plugins/ast-grep-rules/scripts/__tests__/`, `plugins/ast-grep-rules/templates/ast-grep.example.jsonc`, `.claude-plugin/marketplace.json`
    - model: opus — the config contract every later step reads, plus a dependency-free `sgconfig.yml` subset parser (D2, C1)
 
-4. [ ] feat: add the shared rules-inventory and scan core — **done when:** `node --test` proves `scan.mjs --lessons` sorts a fixture corpus reproducing the real 11-checkbox mix into D18's five buckets with exactly one `promotable` and two `needs-type-info`, ignores the fenced template line, and that `scan.mjs --conventions` flags a stated convention with no matching rule id while staying silent on one already enforced
+4. [x] feat: add the shared rules-inventory and scan core — **done when:** `node --test` proves `scan.mjs --lessons` sorts a fixture corpus reproducing the real 11-checkbox mix into D18's five buckets with exactly one `promotable` and two `needs-type-info`, ignores the fenced template line, and that `scan.mjs --conventions` flags a stated convention with no matching rule id while staying silent on one already enforced
    - seam: `plugins/ast-grep-rules/scripts/scan.mjs`, `plugins/ast-grep-rules/scripts/__tests__/`
    - model: opus — one core serving both mechanisms (D21), and the classifier is the fix for stall cause 2
 
