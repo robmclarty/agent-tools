@@ -1,0 +1,7 @@
+id: no-default-export
+language: TypeScript
+severity: error
+message: Export named symbols only — a default export renames at every import site.
+rule:
+  kind: export_statement
+  regex: "default"

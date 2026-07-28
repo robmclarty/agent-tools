@@ -1,0 +1,7 @@
+# Scan-corpus fixture — the repo both scan modes run against: a root rules dir with
+# a nested subdir the inventory must recurse into, and a testConfigs entry so the
+# resolver has nothing to warn about.
+ruleDirs: [rules]
+
+testConfigs:
+  - testDir: tests

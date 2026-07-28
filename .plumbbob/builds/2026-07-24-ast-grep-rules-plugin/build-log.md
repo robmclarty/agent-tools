@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 3 — feat: add plugin manifest, config resolver, and marketplace entry
+**Current step:** 4 — feat: add the shared rules-inventory and scan core
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -25,7 +25,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 
 - ☑ 1. chore(check): add a repo check command over validation and script tests
 - ☑ 2. spike(hooks): verify prompt-hook and paths-frontmatter support
-- ☐ 3. feat: add plugin manifest, config resolver, and marketplace entry
+- ☑ 3. feat: add plugin manifest, config resolver, and marketplace entry
 - ☐ 4. feat: add the shared rules-inventory and scan core
 - ☐ 5. feat: add the scratch-repo test harness
 - ☐ 6. feat: add /init to generate config and bootstrap sgconfig
@@ -100,3 +100,4 @@ folder, so it rides the branch into the PR.)*
     counting hook events reads as "never registered". `--debug-file` is the reliable
     instrument; the event stream alone yields a false negative.
 - 2026-07-28 — step 2 checkpointed · bf1b287d5 — spike(hooks): verify prompt-hook and paths-frontmatter support (5206m)
+- 2026-07-28 — step 3 checkpointed · ba57605f9 — feat: add plugin manifest, config resolver, and marketplace entry (1 drift, 22m)

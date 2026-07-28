@@ -1,0 +1,7 @@
+id: no-class-declaration
+language: TypeScript
+severity: error
+message: Declare behavior with factory functions, not classes.
+note: Suppress a legitimate exception with a trailing `// ast-grep-ignore: no-class-declaration`.
+rule:
+  kind: class_declaration

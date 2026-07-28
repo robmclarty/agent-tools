@@ -268,7 +268,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `.plumbbob/builds/2026-07-24-ast-grep-rules-plugin/build-log.md`
    - model: opus — unattested territory, and the fallback shape is a design call D8/D12 depend on
 
-3. [ ] feat: add plugin manifest, config resolver, and marketplace entry — **done when:** `bash scripts/check.sh` prints `ok ast-grep-rules -> ./plugins/ast-grep-rules` (so registration covers every later step), and `node --test` proves `config.mjs` resolves three fixture sgconfig layouts — `tools/ast-grep/rules` with `testConfigs`, a bare `ruleDirs: [rules]` with no tests dir, `config/ast-grep/rules` — plus the missing-file error path
+3. [x] feat: add plugin manifest, config resolver, and marketplace entry — **done when:** `bash scripts/check.sh` prints `ok ast-grep-rules -> ./plugins/ast-grep-rules` (so registration covers every later step), and `node --test` proves `config.mjs` resolves three fixture sgconfig layouts — `tools/ast-grep/rules` with `testConfigs`, a bare `ruleDirs: [rules]` with no tests dir, `config/ast-grep/rules` — plus the missing-file error path
    - seam: `plugins/ast-grep-rules/.claude-plugin/plugin.json`, `plugins/ast-grep-rules/scripts/config.mjs`, `plugins/ast-grep-rules/scripts/__tests__/`, `plugins/ast-grep-rules/templates/ast-grep.example.jsonc`, `.claude-plugin/marketplace.json`
    - model: opus — the config contract every later step reads, plus a dependency-free `sgconfig.yml` subset parser (D2, C1)
 
