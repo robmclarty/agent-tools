@@ -177,9 +177,12 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
   while clustering across a 7-entry corpus is noise.
 - D7 (prose-store-stays): `docs/lessons.md` stays append-only prose in the established
   template — *because* prose is what actually gets written, and it already parses.
-- D8 (prompt-hook-trigger): the friction trigger is a `PostToolUse` hook, preferring
+- D8 (prompt-hook-trigger): the friction trigger is a `PostToolUse` hook of
   `type: "prompt"` — *because* an LLM gate needs no script, no deps and no cross-platform
-  shell, and the corpus documents the skill failing to self-fire. Subject to step 2; see D19.
+  shell, and the corpus documents the skill failing to self-fire. **Confirmed by step 2**,
+  with one addition the spike forced: `continueOnBlock: true`, without which a fired hook
+  ends the turn instead of offering. Its prompt is echoed to the model verbatim, so it is
+  authored as user-legible prose.
 - D9 (ast-grep-via-config): every ast-grep invocation goes through a configured
   `ast_grep_command`, default `pnpm exec ast-grep` — *because* the binary is a per-repo
   devDependency, not on `PATH`.
@@ -187,8 +190,11 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
   the whole portfolio is TS (zero Python, Rust, Go, Ruby).
 - D11 (local-path-plugin): hosted here as `plugins/ast-grep-rules/` with a relative-path
   source — *because* it needs no build step, and promotion later changes only `source`.
-- D12 (glob-gated-lesson): `/lesson` carries `paths:` glob gating **if step 2 confirms the
-  key exists** — *because* it costs nothing when it works and nothing is lost when it doesn't.
+- D12 (glob-gated-lesson): **retired by step 2** — `/lesson` ships *without* `paths:`.
+  The key is real and does gate project-level skills, but is silently ignored for
+  plugin-delivered skills, which is how this plugin ships (D11) — *because* carrying
+  frontmatter that implies gating which never happens is worse than omitting it. Discovery
+  rests on `description:` (D16) and the hook trigger (D8).
 - D13 (generalize-the-better-variant): where the four repos disagree, generalize from the
   better variant — gantry's 97-line `propose`, ridgeline's broadened `lesson` triggers —
   *because* the majority version is only a majority by copy-paste.
@@ -215,9 +221,9 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
   `declined-none` / `needs-type-info` / `wrong-mechanism` / `already-consumed`, routing
   `needs-type-info` toward oxlint type-aware — *because* the real yield is 1 promotable in
   11, and two entries independently hit ast-grep's type-blindness.
-- D19 (hook-fallback): if step 2 finds `type: "prompt"` unusable, the hook becomes
-  `type: "command"` appending a machine-readable nudge the model may act on — *because*
-  D1's stall fix cannot rest on an unverified primitive.
+- D19 (hook-fallback): **discharged by step 2, not adopted.** `type: "prompt"` fires
+  correctly from a plugin's `hooks/hooks.json`, so the `type: "command"` fallback is not
+  built — *because* the primitive D1's stall fix rests on is now attested by live fire.
 - D20 (sgconfig-bootstrap): `/init` offers to write a minimal `sgconfig.yml`
   (`ruleDirs: [rules]` plus a `testConfigs` entry) when none exists — *because* refusing
   every non-ast-grep repo caps reach at 25 and breaks greenfield, including our own harness.
@@ -254,7 +260,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
 
 ## Steps
 
-1. [ ] chore(check): add a repo check command over validation and script tests — **done when:** `bash scripts/check.sh` exits 0 on the current tree, reports 3 plugins validated and 0 test files, `.plumbbob/settings.json` names it as `check`, and CI runs it
+1. [x] chore(check): add a repo check command over validation and script tests — **done when:** `bash scripts/check.sh` exits 0 on the current tree, reports 3 plugins validated and 0 test files, `.plumbbob/settings.json` names it as `check`, and CI runs it
    - seam: `scripts/check.sh`, `.plumbbob/settings.json`, `.github/workflows/validate.yml`
    - model: sonnet — mechanical; wraps an existing script and globs for `node --test` files
 
@@ -346,6 +352,11 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
 - 2026-07-24 — unattested primitives → **spike before building** (step 2, D19). Zero
   `type: "prompt"` hooks and zero `paths:` frontmatter keys exist locally, and D8 is half
   of D1's stall fix.
+- 2026-07-25 — **step 2 spike, partial verdict** (`spike-01-hook-and-paths-primitives.md`):
+  prompt hooks **work** from a plugin's `hooks/hooks.json` — D8 confirmed (plus
+  `continueOnBlock: true`), D19 discharged. `paths:` **works for project skills but is inert
+  for plugin skills** — D12 retired, step 9 drops the key. Live-fired against Claude Code
+  2.1.220 with a throwaway plugin, not read from docs.
 - 2026-07-24 — repairs applied: the shared-rule count corrected from 8 byte-identical to
   7 files with 3 matching; the drift recorded as *corrective*, with foundry's
   `// ast-grep-ignore: <rule-id>` suppression fix now binding on the starter tiers (D22).

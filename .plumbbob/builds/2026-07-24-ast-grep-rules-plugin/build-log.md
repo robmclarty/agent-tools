@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 1 — chore(check): add a repo check command over validation and script tests
+**Current step:** 2 — spike(hooks): verify prompt-hook and paths-frontmatter support
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -23,7 +23,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 line above. Only ONE step is in flight; a step is done only after a checkpoint —
 check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 
-- ☐ 1. chore(check): add a repo check command over validation and script tests
+- ☑ 1. chore(check): add a repo check command over validation and script tests
 - ☐ 2. spike(hooks): verify prompt-hook and paths-frontmatter support
 - ☐ 3. feat: add plugin manifest, config resolver, and marketplace entry
 - ☐ 4. feat: add the shared rules-inventory and scan core
@@ -43,6 +43,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 > Mid-step, every new problem / idea / "ooh what if" lands HERE, untouched, and you
 > go straight back to the step. Acting the instant an idea arrives is the disease.
 > Capture is one line (`/pb-park` composes it). Harvest happens only at the boundary.
+- [ ] step 5: pin @ast-grep/cli in a root private package.json vs. install per scratch repo — decide where the harness makes the cost visible; versioning needs no package.json (marketplace.json metadata.version is authoritative)
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -70,3 +71,31 @@ fills in as you go, not at the end. Add your own decision/event lines too: this 
 you point at to say "I did that — the LLM helped, but those were my calls."
 `/pb-finish` reads this for the report; `plumbbob finish` commits it with the build
 folder, so it rides the branch into the PR.)*
+- 2026-07-25 — step 1 checkpointed · 2e4c5e510 — chore(check): add a repo check command over validation and script tests (5m)
+- 2026-07-25 — step 2 spike findings — full report in `spike-01-hook-and-paths-primitives.md`.
+  Live-fired against Claude Code 2.1.220 with a throwaway `spikeplug` plugin (`--plugin-dir`)
+  driving real `Edit` calls headlessly; schema read from the shipped binary.
+  - **`PostToolUse` + `type: "prompt"` — WORKS from a plugin's `hooks/hooks.json`.** Debug
+    confirms `Loading hooks from plugin: spikeplug` → `Processing prompt hook` →
+    `Prompt hook condition was not met: SPIKE_REASON_MARKER_7788`. Contract:
+    `{prompt, if?, timeout?, model?, continueOnBlock?, statusMessage?, once?}`; the hook LLM
+    answers `{"ok": bool, "reason": "…"}`. `$ARGUMENTS` expands to the full hook-input JSON
+    including `tool_input` and a `tool_response.structuredPatch` — enough signal for D15.
+  - **Model vs. user.** `ok:true` sends the model *nothing* (verified: `NO FEEDBACK RECEIVED`)
+    — so silence on ordinary edits is free. `ok:false` with `continueOnBlock` unset **ends the
+    turn**, recording the reason as a `hook_stopped_continuation` transcript attachment that
+    never reaches the `stream-json` output; with `continueOnBlock: true` the turn continues and
+    the reason is fed to the model. **The hook's own prompt text is echoed back to the model
+    verbatim (twice) ahead of the reason** — step 10 must author it as user-legible prose.
+    Headless-only limit: interactive rendering of `statusMessage`/the attachment was not
+    visually confirmed.
+  - **`paths:` — real, but INERT for plugin skills.** A/B on identical frontmatter: the
+    project-level `projgated` was absent from the skill inventory until a `.ts` file was
+    touched (control `projplain` listed throughout), while plugin-delivered `spikeplug:gatedts`
+    stayed listed *and* was fully invocable in a session forbidden from touching any file.
+  - **D19 discharged, not adopted** (the `type: "command"` fallback is not needed); **D8
+    confirmed** with `continueOnBlock: true` added; **D12's condition fails** → step 9 drops
+    the `paths:` key.
+  - Method note: prompt hooks emit **no** `hook_started`/`hook_response` stream events, so
+    counting hook events reads as "never registered". `--debug-file` is the reliable
+    instrument; the event stream alone yields a false negative.
