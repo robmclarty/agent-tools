@@ -280,7 +280,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `scripts/scratch-repo.sh`
    - model: sonnet — mechanical shell; every later step's checkable surface depends on it (C7)
 
-6. [ ] feat: add /init to generate config and bootstrap sgconfig — **done when:** in a harness repo stripped of its sgconfig, `/init` offers and writes both `sgconfig.yml` and `.claude/ast-grep.json`, `config.mjs` reads them back, and a second run reports already-configured instead of overwriting
+6. [x] feat: add /init to generate config and bootstrap sgconfig — **done when:** in a harness repo stripped of its sgconfig, `/init` offers and writes both `sgconfig.yml` and `.claude/ast-grep.json`, `config.mjs` reads them back, and a second run reports already-configured instead of overwriting
    - seam: `plugins/ast-grep-rules/skills/init/SKILL.md`
    - model: sonnet — patterned on `/version init`, plus the D20 bootstrap offer
 

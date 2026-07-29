@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 6 — feat: add /init to generate config and bootstrap sgconfig
+**Current step:** 7 — feat: add /rule to scaffold and verify a new rule
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -28,7 +28,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 3. feat: add plugin manifest, config resolver, and marketplace entry
 - ☑ 4. feat: add the shared rules-inventory and scan core
 - ☑ 5. feat: add the scratch-repo test harness
-- ☐ 6. feat: add /init to generate config and bootstrap sgconfig
+- ☑ 6. feat: add /init to generate config and bootstrap sgconfig
 - ☐ 7. feat: add /rule to scaffold and verify a new rule
 - ☐ 8. feat: add /audit to find conventions no rule enforces
 - ☐ 9. feat: add /lesson to record a friction entry
@@ -46,6 +46,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - [ ] step 5: pin @ast-grep/cli in a root private package.json vs. install per scratch repo — decide where the harness makes the cost visible; versioning needs no package.json (marketplace.json metadata.version is authoritative)
 - [ ] A local marketplace registers under the manifest's own name ('robmclarty' → source: directory, path: <abs>), which collides with the globally-registered github marketplace of the same name — so --plugin-dir is the residue-free way to load this plugin from a working tree. Worth a line in the step-13 README.
 - [ ] step 14's headless verification can't observe a write under .claude/ — the harness gates it as a sensitive path and a non-interactive run has nowhere to send the prompt; either drive that leg interactively or find a scoped grant the classifier accepts
+- [ ] ast-grep's snapshot requirement changed between 0.42.1 (missing snapshot tolerated) and 0.45.0 (missing snapshot fails) — the starter tiers in step 12 must ship snapshots, and the step-13 README should name a minimum ast-grep version rather than assume one
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -139,3 +140,44 @@ folder, so it rides the branch into the PR.)*
     override that switches the default off, so a repo that grows a `CLAUDE.md` later would
     silently never be audited against it. Detection now always lists `CLAUDE.md` whether or
     not it exists; the resolver reports an absent entry as `exists: false` and moves on.
+- 2026-07-29 — step 6 checkpointed · d03665fd7 — feat: add /init to generate config and bootstrap sgconfig (1 drift, 1118m)
+- 2026-07-29 — step 7 live fire — `/ast-grep-rules:rule` driven headlessly against a scratch
+  repo (`scripts/scratch-repo.sh`, `claude --plugin-dir`), once per branch of D4.
+  - **Snapshots are NOT optional on the pinned ast-grep, and the plan said they were.**
+    Planning probed ridgeline (0.42.1) with `--snapshot-dir __nosnaps__` and got
+    `test result: ok`, so the plan made the `-U` pass an opt-in extra. On **0.45.0**, the
+    version `scratch-repo.sh` pins, a fixture with `invalid:` cases **fails** until its
+    snapshot exists: `FAIL … .W`, exit 4, *"Test failed due to mismatching snapshots."*
+    `test -U` records it and the plain no-flag `test` is then green;
+    `--skip-snapshot-tests` is the escape hatch. So `/rule` now records the snapshot as
+    part of reaching green (three files, not two), and the skill documents the `.M` vs
+    `.W` markers because they point at completely different problems — a rule that does
+    not match versus a rule with no recorded span. Caught by the plan's own
+    "confirm on the pinned version" item; the contract changed at the pause, not silently.
+  - **The scaffold is born red, and that is the D3 gate.** Straight after
+    `scaffold-rule.mjs no-untyped-json-parse`, `ast-grep test` reports
+    `[Missing] Expect rule … to report issues, but none found in: const TODO_REPLACE_ME_INVALID = 1`
+    — the emitted YAML parses and loads, and the placeholder pattern deliberately matches
+    no sample. An unfinished rule cannot masquerade as a green one without deleting the
+    fixture outright.
+  - **Both D4 branches reach the same end state.** `scaffold_command: null` → the plugin
+    wrote both halves. `scaffold_command: "pnpm scaffold:ast-grep-rule"` (a stub added to
+    the scratch repo, gantry-shaped: rule file only, no fixture) → the repo's scaffolder
+    wrote the rule, `--fixture-only` wrote the fixture, and the returned
+    `skipped: ["rules/…yml"]` is what kept the plugin from writing a second copy. The
+    repo's house shape survived intact — its `severity: error` and uncommented
+    `files: ["src/**/*.ts"]` are still there in the finished rule. A flag, not a fork.
+  - **D22 holds in the artifact, both legs.** The trailing
+    `// ast-grep-ignore: no-untyped-json-parse` form appears in the rule's `note:`;
+    `ast-grep-ignore-next-line` appears nowhere under `rules/` or `tests/`.
+  - **One template defect the unit test caught before the live fire.** The first `note:`
+    named the broken `ast-grep-ignore-next-line` form in order to warn against it — which
+    would bake that string into the note of every rule this plugin ever writes, for a model
+    to retrieve fuzzily later. The warning moved to the SKILL (read once, by the author);
+    the note now states only the form that works.
+  - **One skill defect the live fire caught.** Leg B wrote a scratch `.agr-probe/probe.ts`
+    into the repo for AST probing and could not remove it. The skill now says to probe
+    against files that already exist and to put scratch samples in the fixture's own
+    `valid:`/`invalid:` lists; leg A left the working tree clean.
+  - Verified independently of the agent's own report each time: `git status`, the plain
+    no-flag `ast-grep test`, and a `grep` for both suppression forms.
