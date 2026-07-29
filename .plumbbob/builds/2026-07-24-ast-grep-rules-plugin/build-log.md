@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 9 — feat: add /lesson to record a friction entry
+**Current step:** 10 — feat: add a PostToolUse hook as the friction trigger
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -31,7 +31,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 6. feat: add /init to generate config and bootstrap sgconfig
 - ☑ 7. feat: add /rule to scaffold and verify a new rule
 - ☑ 8. feat: add /audit to find conventions no rule enforces
-- ☐ 9. feat: add /lesson to record a friction entry
+- ☑ 9. feat: add /lesson to record a friction entry
 - ☐ 10. feat: add a PostToolUse hook as the friction trigger
 - ☐ 11. feat: add /mine to classify and route lesson candidates
 - ☐ 12. feat: add the opt-in starter rulesets
@@ -48,6 +48,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - [ ] step 14's headless verification can't observe a write under .claude/ — the harness gates it as a sensitive path and a non-interactive run has nowhere to send the prompt; either drive that leg interactively or find a scoped grant the classifier accepts
 - [ ] ast-grep's snapshot requirement changed between 0.42.1 (missing snapshot tolerated) and 0.45.0 (missing snapshot fails) — the starter tiers in step 12 must ship snapshots, and the step-13 README should name a minimum ast-grep version rather than assume one
 - [ ] all three /audit live fires independently flagged it: a convention_docs entry pointing at a file that doesn't exist produces no warning — scan.mjs conventions mode should say which configured docs it skipped, not just which it read (config.mjs already carries the exists flag)
+- [ ] Amend spike-01 with step 10's two live-fire findings: PostToolUse prompt hooks get no transcript (Stop only), and if: is a free pre-LLM permission-rule filter whose brace alternation is silently inert
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -269,3 +270,4 @@ folder, so it rides the branch into the PR.)*
     plugin "isn't on disk" and hand-reconstructed an entry from the log's own template —
     a plausible-looking result produced without the skill ever running. `Skill` must be in
     the list; the same trap is waiting for steps 11 and 14.
+- 2026-07-29 — step 9 checkpointed · 8e238e827 — feat: add /lesson to record a friction entry (24m)

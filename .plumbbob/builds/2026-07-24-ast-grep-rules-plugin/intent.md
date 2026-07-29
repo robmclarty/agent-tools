@@ -292,7 +292,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `plugins/ast-grep-rules/skills/audit/SKILL.md`
    - model: opus — the headline mechanism (D17); judging what counts as a stated, structurally-enforceable convention is the real work
 
-9. [ ] feat: add /lesson to record a friction entry — **done when:** invoking it appends a template-conforming entry at `lessons_path` that `scan.mjs --lessons` parses back with the right title and bucket
+9. [x] feat: add /lesson to record a friction entry — **done when:** invoking it appends a template-conforming entry at `lessons_path` that `scan.mjs --lessons` parses back with the right title and bucket
    - seam: `plugins/ast-grep-rules/skills/lesson/SKILL.md`
    - model: sonnet — a port; carry ridgeline's broadened triggers (D13) and `paths:` only if step 2 confirmed it (D12)
 
