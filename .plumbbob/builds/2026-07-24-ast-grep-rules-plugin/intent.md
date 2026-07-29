@@ -288,7 +288,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `plugins/ast-grep-rules/skills/rule/SKILL.md`, `plugins/ast-grep-rules/scripts/scaffold-rule.mjs`
    - model: opus — the fixture-plus-verification contract (D3), the capability flag (D4), and D22's correction
 
-8. [ ] feat: add /audit to find conventions no rule enforces — **done when:** in a harness repo seeded with a conventions doc stating three enforceable conventions of which one already has a rule, `/audit` reports exactly the two unenforced, cites where each is stated, and hands them to `/rule`
+8. [x] feat: add /audit to find conventions no rule enforces — **done when:** in a harness repo seeded with a conventions doc stating three enforceable conventions of which one already has a rule, `/audit` reports exactly the two unenforced, cites where each is stated, and hands them to `/rule`
    - seam: `plugins/ast-grep-rules/skills/audit/SKILL.md`
    - model: opus — the headline mechanism (D17); judging what counts as a stated, structurally-enforceable convention is the real work
 

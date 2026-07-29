@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 8 — feat: add /audit to find conventions no rule enforces
+**Current step:** 9 — feat: add /lesson to record a friction entry
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -30,7 +30,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 5. feat: add the scratch-repo test harness
 - ☑ 6. feat: add /init to generate config and bootstrap sgconfig
 - ☑ 7. feat: add /rule to scaffold and verify a new rule
-- ☐ 8. feat: add /audit to find conventions no rule enforces
+- ☑ 8. feat: add /audit to find conventions no rule enforces
 - ☐ 9. feat: add /lesson to record a friction entry
 - ☐ 10. feat: add a PostToolUse hook as the friction trigger
 - ☐ 11. feat: add /mine to classify and route lesson candidates
@@ -227,3 +227,45 @@ folder, so it rides the branch into the PR.)*
     `convention_docs: ["CLAUDE.md"]` pointing at a file that does not exist produces no
     warning — the scan silently audits one doc while the config claims two. Outside this
     step's seam; parked for the scan core.
+- 2026-07-29 — step 8 checkpointed · 21a0156a8 — feat: add /audit to find conventions no rule enforces (30m)
+- 2026-07-29 — step 9 live fire — `/ast-grep-rules:lesson` driven headlessly against a scratch
+  repo (`scripts/scratch-repo.sh`, `claude --plugin-dir`), four runs covering three buckets,
+  all three placement branches and the recurrence path. Every result verified against
+  `scan.mjs --lessons` and `git status` independently of the agent's own report.
+  - **The done-when holds in all three placement branches.** Run A (log exists, template
+    only) appended below the fenced template and parsed back as `promotable`, title verbatim;
+    run B (same day) reused the existing `## 2026-07-29` heading rather than adding a second
+    one, inserted newest-first above run A's entry, and parsed back as `needs-type-info`
+    (signal `matched "needs type"`); run C (**no log at all**) created `docs/lessons.md` with
+    the header and fenced template and parsed back as `wrong-mechanism` (signal
+    `matched "not an AST"`). `entries` incremented by exactly one each time and `git status`
+    showed only `docs/lessons.md`, every run — no stray files.
+  - **The created file round-trips the harness's own shape.** What `/lesson` writes into an
+    empty repo is the same header + fenced-template document `scratch-repo.sh` seeds, so the
+    scan skips the template on a file the skill authored exactly as it does on one the
+    harness authored. This is the branch `/init` deliberately delegates here (detection
+    step 2) so the template has one author; it now has one.
+  - **Optional next-step lines don't pollute the signal.** Run A emitted a `- [ ] doc:` line
+    alongside its `- [ ] rule:` line; the scan counted one candidate, not two. The corpus
+    template's richness survives without the miner double-counting it.
+  - **The recurrence path is additive, and it is the right shape.** Run D re-reported run C's
+    friction. The skill amended the existing entry instead of appending a near-duplicate:
+    `entries` stayed 1, the diff is a new `**Recurrence:**` line plus a sharpened `rule:`
+    sentence, and no recorded prose was reworded or deleted. This is the one place the skill
+    edits an existing entry, and it is what keeps recurrence — the strongest argument a rule
+    ever gets — concentrated on one candidate rather than split into two the miner would
+    surface separately.
+  - **D12 is honored by omission and D13 by construction.** No `paths:` key (step 2 proved it
+    inert for plugin skills). The trigger list carries ridgeline's broadened ones — a change
+    reverted or reworked in the same session, a doc statement read literally against the
+    wrong repo state — plus two the corpus's own stall diagnosis argues for: *the user
+    corrected you*, and *the hook offered*.
+  - **No git tools, deliberately.** All four source skills commit the lesson themselves; this
+    one does not, and hands the `git add … && git commit -m "lesson: <title>"` line to the
+    user instead. The hook (step 10) fires mid-edit, where committing would splice a commit
+    into work the user is still staging.
+  - Method note, and a false negative worth recording: driving the skill with an explicit
+    `--allowedTools` list **silently excludes the `Skill` tool**. The first run reported the
+    plugin "isn't on disk" and hand-reconstructed an entry from the log's own template —
+    a plausible-looking result produced without the skill ever running. `Skill` must be in
+    the list; the same trap is waiting for steps 11 and 14.
