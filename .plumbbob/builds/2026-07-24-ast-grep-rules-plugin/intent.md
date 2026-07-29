@@ -276,7 +276,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `plugins/ast-grep-rules/scripts/scan.mjs`, `plugins/ast-grep-rules/scripts/__tests__/`
    - model: opus — one core serving both mechanisms (D21), and the classifier is the fix for stall cause 2
 
-5. [ ] feat: add the scratch-repo test harness — **done when:** `bash scripts/scratch-repo.sh <dir>` builds a throwaway repo (git init, `@ast-grep/cli`, minimal sgconfig, two `.ts` files, seeded `docs/lessons.md`) where `ast-grep test` runs clean against zero rules and the plugin resolves from this working tree; running it twice leaves no residue
+5. [x] feat: add the scratch-repo test harness — **done when:** `bash scripts/scratch-repo.sh <dir>` builds a throwaway repo (git init, `@ast-grep/cli`, minimal sgconfig, two `.ts` files, seeded `docs/lessons.md`) where `ast-grep test` runs clean against zero rules and the plugin resolves from this working tree; running it twice leaves no residue
    - seam: `scripts/scratch-repo.sh`
    - model: sonnet — mechanical shell; every later step's checkable surface depends on it (C7)
 
