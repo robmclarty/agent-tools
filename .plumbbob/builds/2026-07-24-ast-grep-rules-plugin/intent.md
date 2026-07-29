@@ -284,7 +284,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `plugins/ast-grep-rules/skills/init/SKILL.md`
    - model: sonnet — patterned on `/version init`, plus the D20 bootstrap offer
 
-7. [ ] feat: add /rule to scaffold and verify a new rule — **done when:** in a harness repo it produces both `<id>.yml` and `<id>-test.yml` and `ast-grep test` passes; the same run with `scaffold_command` unset writes the YAML directly and reaches the same state; the emitted `note:` documents the trailing `// ast-grep-ignore: <id>` form
+7. [x] feat: add /rule to scaffold and verify a new rule — **done when:** in a harness repo it produces both `<id>.yml` and `<id>-test.yml` and `ast-grep test` passes; the same run with `scaffold_command` unset writes the YAML directly and reaches the same state; the emitted `note:` documents the trailing `// ast-grep-ignore: <id>` form
    - seam: `plugins/ast-grep-rules/skills/rule/SKILL.md`, `plugins/ast-grep-rules/scripts/scaffold-rule.mjs`
    - model: opus — the fixture-plus-verification contract (D3), the capability flag (D4), and D22's correction
 

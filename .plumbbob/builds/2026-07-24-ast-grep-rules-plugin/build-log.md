@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 7 — feat: add /rule to scaffold and verify a new rule
+**Current step:** 8 — feat: add /audit to find conventions no rule enforces
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -29,7 +29,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 4. feat: add the shared rules-inventory and scan core
 - ☑ 5. feat: add the scratch-repo test harness
 - ☑ 6. feat: add /init to generate config and bootstrap sgconfig
-- ☐ 7. feat: add /rule to scaffold and verify a new rule
+- ☑ 7. feat: add /rule to scaffold and verify a new rule
 - ☐ 8. feat: add /audit to find conventions no rule enforces
 - ☐ 9. feat: add /lesson to record a friction entry
 - ☐ 10. feat: add a PostToolUse hook as the friction trigger
@@ -47,6 +47,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - [ ] A local marketplace registers under the manifest's own name ('robmclarty' → source: directory, path: <abs>), which collides with the globally-registered github marketplace of the same name — so --plugin-dir is the residue-free way to load this plugin from a working tree. Worth a line in the step-13 README.
 - [ ] step 14's headless verification can't observe a write under .claude/ — the harness gates it as a sensitive path and a non-interactive run has nowhere to send the prompt; either drive that leg interactively or find a scoped grant the classifier accepts
 - [ ] ast-grep's snapshot requirement changed between 0.42.1 (missing snapshot tolerated) and 0.45.0 (missing snapshot fails) — the starter tiers in step 12 must ship snapshots, and the step-13 README should name a minimum ast-grep version rather than assume one
+- [ ] all three /audit live fires independently flagged it: a convention_docs entry pointing at a file that doesn't exist produces no warning — scan.mjs conventions mode should say which configured docs it skipped, not just which it read (config.mjs already carries the exists flag)
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -181,3 +182,48 @@ folder, so it rides the branch into the PR.)*
     `valid:`/`invalid:` lists; leg A left the working tree clean.
   - Verified independently of the agent's own report each time: `git status`, the plain
     no-flag `ast-grep test`, and a `grep` for both suppression forms.
+- 2026-07-29 — step 7 checkpointed · d7a2a7b1c — feat: add /rule to scaffold and verify a new rule (1 drift, 23m)
+- 2026-07-29 — step 8 live fire — `/ast-grep-rules:audit` driven headlessly against a scratch
+  repo (`scripts/scratch-repo.sh`, `claude --plugin-dir`), three runs. The repo was seeded
+  with a conventions doc stating three enforceable conventions (one already carrying a rule)
+  plus two distractors; the skill is read-only by construction — no `Write`, no `Edit` in
+  `allowed-tools` — so unlike step 6 this ran headlessly with no permission-layer problem.
+  - **The done-when holds, and the prose leg is what proves D17.** The deterministic first
+    pass (`scan.mjs --conventions`) sees only normative *bullet* lines, so one of the two
+    unenforced conventions was seeded as a **prose paragraph** and is invisible to it —
+    the scan returns 1 enforced (unverified) and 3 unenforced, of which only one is a real
+    gap. All three runs recovered the prose convention by reading the doc, reported exactly
+    the two unenforced ones with `path:line` citations plus a proposed id and both samples,
+    and offered them to `/rule`. A skill that just relayed the JSON would have found one gap
+    and missed the one being violated in `src/parse-config.ts` right now.
+  - **The live fire refuted the plan's own instruction, and it was right.** Run 1 was seeded
+    with "every exported function must declare an explicit return type" as a
+    `needs-type-info` distractor, and the SKILL listed "return types" as a canonical example
+    of what routes to oxlint. The agent refused the bucket and argued the convention is about
+    whether an *annotation was written*, which is plain syntax. Checked directly against
+    ast-grep 0.45.0 — `kind: function_declaration` + `not: {has: {kind: type_annotation,
+    field: return_type}}` matches the unannotated function and leaves the annotated one
+    alone. **The instruction was wrong.** It now splits types by *written down* (structural:
+    a written `any`, an `as` cast, a missing return-type annotation) versus *resolved*
+    (`needs-type-info`: what a value actually is, nullability, inferred `any`). A weaker model
+    following the original text literally would have routed a genuinely enforceable
+    convention to a linter the repo doesn't even have — the exact silent loss D18 exists to
+    prevent. The distractor was reseeded as a true resolution case ("never `await` a value
+    that is not a promise"), which runs 2 and 3 routed correctly.
+  - **Step 3's "verify the `enforced` claims" is the sharpest thing in the skill.** The scan
+    matched the class convention `via: "tokens"` — a guess. Every run read the rule file and
+    ran it rather than trusting the match, and each one found a real hole: run 2 caught that
+    `kind: class_declaration` misses `const A = class {}` (node kind `class`); after widening
+    the seeded rule, run 3 caught that it still misses `abstract class Shape {}` (node kind
+    `abstract_class_declaration` — a distinct kind, not a subtype). Both confirmed
+    independently with `--debug-query=ast` and a scan that found 1 hit in a 2-class file.
+    A token match reported as enforced is the one failure nobody sees; this is the step that
+    catches it. Run 3 labelled the third item an *amendment to an existing rule*, not a
+    fourth convention, so "exactly the two unenforced" still reads clean.
+  - **C3 verified structurally, not by promise.** `git status --porcelain` in the scratch
+    repo was **empty** after all three runs. The skill has no `Write` and no `Edit`; it finds
+    work and hands it to `/rule`.
+  - **One finding parked, not fixed.** All three runs independently flagged that
+    `convention_docs: ["CLAUDE.md"]` pointing at a file that does not exist produces no
+    warning — the scan silently audits one doc while the config claims two. Outside this
+    step's seam; parked for the scan core.
