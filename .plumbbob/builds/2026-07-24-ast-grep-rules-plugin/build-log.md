@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 10 — feat: add a PostToolUse hook as the friction trigger
+**Current step:** 11 — feat: add /mine to classify and route lesson candidates
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -32,7 +32,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 7. feat: add /rule to scaffold and verify a new rule
 - ☑ 8. feat: add /audit to find conventions no rule enforces
 - ☑ 9. feat: add /lesson to record a friction entry
-- ☐ 10. feat: add a PostToolUse hook as the friction trigger
+- ☑ 10. feat: add a PostToolUse hook as the friction trigger
 - ☐ 11. feat: add /mine to classify and route lesson candidates
 - ☐ 12. feat: add the opt-in starter rulesets
 - ☐ 13. docs: add the plugin README and root marketplace table row
@@ -49,6 +49,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - [ ] ast-grep's snapshot requirement changed between 0.42.1 (missing snapshot tolerated) and 0.45.0 (missing snapshot fails) — the starter tiers in step 12 must ship snapshots, and the step-13 README should name a minimum ast-grep version rather than assume one
 - [ ] all three /audit live fires independently flagged it: a convention_docs entry pointing at a file that doesn't exist produces no warning — scan.mjs conventions mode should say which configured docs it skipped, not just which it read (config.mjs already carries the exists flag)
 - [ ] Amend spike-01 with step 10's two live-fire findings: PostToolUse prompt hooks get no transcript (Stop only), and if: is a free pre-LLM permission-rule filter whose brace alternation is silently inert
+- [ ] scan.mjs --lessons states `entries` but not the item count, so /mine has to derive the total by summing `buckets`; a `candidates: <n>` field would remove the hand-count that made a live-fire run miscount and then invent a scan bug to explain it
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -271,3 +272,46 @@ folder, so it rides the branch into the PR.)*
     a plausible-looking result produced without the skill ever running. `Skill` must be in
     the list; the same trap is waiting for steps 11 and 14.
 - 2026-07-29 — step 9 checkpointed · 8e238e827 — feat: add /lesson to record a friction entry (24m)
+- 2026-07-29 — step 10 checkpointed · 7668b1f93 — feat: add a PostToolUse hook as the friction trigger (1 drift, 26m)
+- 2026-07-29 — step 11 live fire — `/ast-grep-rules:mine` driven headlessly on **sonnet** (the
+  plan's recommended model for this step) against a scratch repo seeded with the step-4 fixture
+  corpus, four runs across three legs. The skill is read-only by construction — no `Write`, no
+  `Edit` in `allowed-tools` — so it ran headlessly with no permission-layer problem, and `Skill`
+  was in `--allowedTools` throughout (the step-9 method note's trap).
+  - **The done-when holds on the unmodified corpus (leg A).** 12 entries / 11 checkboxes, and the
+    run reported all five buckets with counts (1 promotable, 2 needs-type-info, 1 wrong-mechanism,
+    6 declined-none, 1 already-consumed), declined all six entries with no AST form, routed **both**
+    type-blind entries to oxlint type-aware *by name and with what the type-aware rule would check*
+    rather than dropping them, and handed the single promotable one — the anchored-fence candidate —
+    to `/rule` with a proposed id, `docs/lessons.md:36`, and both samples. It also caught the 12th
+    entry carrying no `- [ ] rule:` line at all, which is invisible to the scan permanently, and
+    verified the one `[x]` against `rules.ids` instead of taking it on trust.
+  - **Leg A overrode nothing, so the re-judgment table was untested.** Leg B planted three traps
+    the script's first pass gets wrong by construction: a stale `[x]` for a rule id not in the
+    inventory, a `needs-type-info`-cued entry that is really structural (a *missing return-type
+    annotation* — written, not resolved), and a no-cue entry that defaults to `promotable` but has
+    no AST shape at all (a five-minute deploy budget). **All three were caught**, with a
+    before/after bucket table and a named reason for each move. Leg C then made the stale tick
+    *silent* — ordinary prose, nothing hinting it was false — and it was still caught, by the
+    `rules.ids` cross-check alone. Leg C also hit the "two entries contradict each other" edge case
+    on its own and reported both while proposing neither, which is what the skill asks for.
+  - **The live fire caught a real defect, twice, and it was an honesty problem rather than a
+    formatting one.** Both leg-C runs reported `items.length: 13` when the scan emits 14 — and the
+    second one did not stop at a miscount: it concluded an item was present in `buckets` but
+    missing from `items[]`, called it a scan bug, and recommended filing it. Checked directly:
+    `jq '.items | length'` is 14 and the entry it named is right there. The cause is that
+    `scan.mjs --lessons` states `entries` but **not** the item count, so the total has to come from
+    counting 14 JSON objects by eye — reliable at 11 items (legs A and B were both correct), not at
+    14. The skill now takes the total by summing the five `buckets` numbers, states that `buckets`
+    is tallied from `items` in the same pass so the two *cannot* disagree, and says a mismatch is
+    always a miscount and never a bug to report. Re-fired: 15 entries, buckets summing to 14, the
+    gap of 1 named by title, and the post-re-judgment table still summing to 14. The underlying
+    ergonomic fix — a `candidates: <n>` field in the scan output — is outside this seam and parked.
+  - **The stall fix is in the text, not just the intent.** No threshold anywhere: not on corpus
+    size, not on recurrence. Recurrence ranks a candidate (step 3) and explicitly gates nothing,
+    and "the log is short" appears under **When NOT to use** only as the retired gate, named as the
+    failure mode. That is the pair of gates — *"<10 entries total"* and *"≥3 lessons per cluster"* —
+    that made the original miner unreachable in all four repos it shipped to.
+  - **C3 verified structurally, not by promise.** `git status --porcelain` in the scratch repo was
+    **empty** after every run. Ticking a checkbox stays `/rule`'s job, after its fixture is green.
+  - Scratch repo removed after the last run.

@@ -296,7 +296,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
    - seam: `plugins/ast-grep-rules/skills/lesson/SKILL.md`
    - model: sonnet — a port; carry ridgeline's broadened triggers (D13) and `paths:` only if step 2 confirmed it (D12)
 
-10. [ ] feat: add a PostToolUse hook as the friction trigger — **done when:** in a harness repo, built to whichever shape step 2 confirmed (D8 or D19), a deliberate correction turn produces the offer and three ordinary edits in a row produce none
+10. [x] feat: add a PostToolUse hook as the friction trigger — **done when:** in a harness repo, built to whichever shape step 2 confirmed (D8 or D19), a deliberate correction turn produces the offer and three ordinary edits in a row produce none
     - seam: `plugins/ast-grep-rules/hooks/hooks.json`
     - model: opus — trigger precision is the whole value; too eager and it trains the user to dismiss it (D15)
 
