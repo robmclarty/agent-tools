@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 14 — feat: point /rule and /audit at the cookbook when authoring
+**Current step:** 15 — docs: add the plugin README and root marketplace table row
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -36,7 +36,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 11. feat: add /mine to classify and route lesson candidates
 - ☑ 12. feat: add the opt-in starter rulesets
 - ☑ 13. feat: replace the starter tiers with a technique cookbook
-- ☐ 14. feat: point /rule and /audit at the cookbook when authoring
+- ☑ 14. feat: point /rule and /audit at the cookbook when authoring
 - ☐ 15. docs: add the plugin README and root marketplace table row
 - ☐ 16. chore: verify both loops end to end in a throwaway repo
 
@@ -359,3 +359,4 @@ folder, so it rides the branch into the PR.)*
     preflight is granted as the exact string `install-starter.mjs --list` rather than a `*`
     prefix, so neither skill can install even if it tried.
   - Scratch repo removed after the last run.
+- 2026-07-31 — step 14 checkpointed · a72581857 — feat: point /rule and /audit at the cookbook when authoring (41m)

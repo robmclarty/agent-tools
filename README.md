@@ -19,6 +19,7 @@ Add the marketplace once, then install whichever plugins you want:
 /plugin install plumbbob@robmclarty
 /plugin install version@robmclarty
 /plugin install commit-with-til@robmclarty
+/plugin install ast-grep-rules@robmclarty
 ```
 
 ## Plugins
@@ -28,6 +29,7 @@ Add the marketplace once, then install whichever plugins you want:
 | `plumbbob` | npm (`plumbbob`) | Attention-first build process — driver skills + a CLI that keep you the decider; guidance, not enforcement. |
 | `version` | this repo (`plugins/version`) | Portable `/version` release skill — a deterministic, config-driven bump engine plus one invariant workflow that adapts to any repo via `.claude/version.json`. Run `/version init` once per repo to generate the config. |
 | `commit-with-til` | this repo (`plugins/commit-with-til`) | Conventional commits with TIL extraction for code-diary — a deterministic never-stage filter script plus a one-tool-call `/commit` skill. |
+| `ast-grep-rules` | this repo (`plugins/ast-grep-rules`) | Adaptive structural lint for TypeScript — `/audit` finds conventions your docs state but no ast-grep rule enforces; a friction hook, `/lesson` and `/mine` feed the long tail; every rule lands with a passing test fixture. Run `/ast-grep-rules:init` once per repo. |
 
 The marketplace `name` is `robmclarty`, so plugins install as `<plugin>@robmclarty`
 regardless of this repository's name.
