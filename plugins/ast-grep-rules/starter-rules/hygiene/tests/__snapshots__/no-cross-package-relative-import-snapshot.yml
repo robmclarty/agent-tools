@@ -1,0 +1,16 @@
+id: no-cross-package-relative-import
+snapshots:
+  ? |
+    import type { t } from '../../../../other/src/types.ts'
+  : labels:
+    - source: import type { t } from '../../../../other/src/types.ts'
+      style: primary
+      start: 0
+      end: 55
+  ? |
+    import { fn } from '../../../other-package/src/fn.ts'
+  : labels:
+    - source: import { fn } from '../../../other-package/src/fn.ts'
+      style: primary
+      start: 0
+      end: 53

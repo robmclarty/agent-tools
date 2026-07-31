@@ -1,0 +1,8 @@
+{
+  "name": "functional-style",
+  "title": "Functional style",
+  "summary": "Four rules enforcing one house style: no classes, no `this`, no inheritance, no default exports.",
+  "description": "This tier encodes a decision, not a defect. There is nothing wrong with a class — these rules exist because some projects have chosen records plus free functions and want the choice enforced rather than restated in review. The default-export rule rides along for the same reason: named exports keep an identity that is stable across files, which is what makes a codebase searchable.",
+  "adopt_when": "Your project has actually made this call and says so somewhere — a CLAUDE.md, a constraints doc, a taste doc. Enforcing a style nobody agreed to is how a rule gets suppressed everywhere instead of followed.",
+  "decline_when": "You use classes, you use a framework that requires default exports, or the question has simply never come up. Decline now and adopt later; nothing else in this plugin depends on it."
+}

@@ -1,0 +1,25 @@
+id: no-this-keyword
+snapshots:
+  ? |
+    const get = () => this.value
+  : labels:
+    - source: this
+      style: primary
+      start: 18
+      end: 22
+  ? |
+    const incr = function () {
+      return this.count + 1
+    }
+  : labels:
+    - source: this
+      style: primary
+      start: 36
+      end: 40
+  ? |
+    const with_default = (x = this.y) => x
+  : labels:
+    - source: this
+      style: primary
+      start: 26
+      end: 30

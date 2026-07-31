@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 11 — feat: add /mine to classify and route lesson candidates
+**Current step:** 12 — feat: add the opt-in starter rulesets
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -33,7 +33,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 8. feat: add /audit to find conventions no rule enforces
 - ☑ 9. feat: add /lesson to record a friction entry
 - ☑ 10. feat: add a PostToolUse hook as the friction trigger
-- ☐ 11. feat: add /mine to classify and route lesson candidates
+- ☑ 11. feat: add /mine to classify and route lesson candidates
 - ☐ 12. feat: add the opt-in starter rulesets
 - ☐ 13. docs: add the plugin README and root marketplace table row
 - ☐ 14. chore: verify both loops end to end in a throwaway repo
@@ -50,6 +50,8 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - [ ] all three /audit live fires independently flagged it: a convention_docs entry pointing at a file that doesn't exist produces no warning — scan.mjs conventions mode should say which configured docs it skipped, not just which it read (config.mjs already carries the exists flag)
 - [ ] Amend spike-01 with step 10's two live-fire findings: PostToolUse prompt hooks get no transcript (Stop only), and if: is a free pre-LLM permission-rule filter whose brace alternation is silently inert
 - [ ] scan.mjs --lessons states `entries` but not the item count, so /mine has to derive the total by summing `buckets`; a `candidates: <n>` field would remove the hand-count that made a live-fire run miscount and then invent a scan bug to explain it
+- [ ] the four source repos still carry the buggy no-this-keyword: its note claims a `this: void` parameter is exempt but the rule flags it — a fleet fix, out of this build's scope
+- [ ] D22 picked foundry's rule variants from a 4-repo survey that missed fascicle (foundry's successor, committed daily, 23 rules) — the conclusion survives but the stated rationale is stale; /plumbbob:refine when convenient
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -315,3 +317,4 @@ folder, so it rides the branch into the PR.)*
   - **C3 verified structurally, not by promise.** `git status --porcelain` in the scratch repo was
     **empty** after every run. Ticking a checkbox stays `/rule`'s job, after its fixture is green.
   - Scratch repo removed after the last run.
+- 2026-07-31 — step 11 checkpointed · a6e0f041a — feat: add /mine to classify and route lesson candidates (1968m)

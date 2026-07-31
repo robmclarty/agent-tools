@@ -1,0 +1,26 @@
+id: no-class-declaration
+# `valid:` pins the three shapes this rule must leave alone — the record it is
+# steering you toward, an interface, and a closure factory — because an
+# over-broad version of this rule would make the recommended replacement itself
+# unwritable. `invalid:` covers both class kinds the rule lists.
+valid:
+  - |
+    type counter = { count: number }
+    const increment = (c: counter): counter => ({ count: c.count + 1 })
+  - |
+    interface user { id: string; name: string }
+  - |
+    const make_counter = () => {
+      let count = 0
+      return { increment: () => { count += 1 } }
+    }
+
+invalid:
+  - |
+    class Counter {
+      count = 0
+    }
+  - |
+    abstract class Shape {
+      abstract area(): number
+    }

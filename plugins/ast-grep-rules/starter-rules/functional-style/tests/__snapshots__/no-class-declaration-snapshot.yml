@@ -1,0 +1,26 @@
+id: no-class-declaration
+snapshots:
+  ? |
+    abstract class Shape {
+      abstract area(): number
+    }
+  : labels:
+    - source: |-
+        abstract class Shape {
+          abstract area(): number
+        }
+      style: primary
+      start: 0
+      end: 50
+  ? |
+    class Counter {
+      count = 0
+    }
+  : labels:
+    - source: |-
+        class Counter {
+          count = 0
+        }
+      style: primary
+      start: 0
+      end: 29

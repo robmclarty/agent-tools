@@ -1,0 +1,21 @@
+id: no-untyped-json-parse
+# `valid:` is the half that catches an over-broad rule, so the wrappers this rule
+# must accept are pinned here — including `safeParse`, and a parse whose result is
+# further narrowed. `invalid:` covers the two shapes a bare parse actually takes:
+# assigned to a binding, and returned directly.
+valid:
+  - |
+    const user = user_schema.parse(JSON.parse(raw))
+  - |
+    const payload = schema.safeParse(JSON.parse(data))
+  - |
+    const config = config_schema.parse(JSON.parse(raw)) as app_config
+
+invalid:
+  - |
+    const raw = '{}'
+    const x = JSON.parse(raw)
+  - |
+    const run = () => {
+      return JSON.parse(text)
+    }

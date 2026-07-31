@@ -1,0 +1,51 @@
+id: no-this-keyword
+language: TypeScript
+severity: error
+message: "Don't use `this`. Pass state explicitly: `const increment = (c: counter): counter => ({ count: c.count + 1 })`."
+note: |
+  This is the other half of no-class-declaration. `this` is the mechanism that
+  makes a call's meaning depend on how it was reached rather than on what was
+  passed to it, which is exactly what the functional style is trading away.
+
+      const increment = (c: counter): counter => ({ count: c.count + 1 })
+      const format = (self: { id: string }) => self.id
+
+  Writing `this.foo` almost always means you want either a closure over the state
+  or a record passed in as the first argument.
+
+  `this` in a *type* position is allowed and not matched here — a polymorphic
+  `this` return type, or the `this: void` parameter TypeScript uses to declare
+  that a function has no receiver. The rule catches runtime uses only. The
+  parameter exemption is deliberately the immediate parent and carries no
+  `stopBy`, so a `this` buried in a default value — `(x = this.y) => x` — is
+  still caught.
+
+  A genuine exception — a framework callback invoked with an explicit receiver —
+  goes on the line:
+
+      return this.ctx // ast-grep-ignore: no-this-keyword
+
+  That trailing form is the one that works. `ast-grep-ignore-next-line` on its own
+  line does not. Path-wide exceptions go in `ignores` below.
+
+rule:
+  kind: this
+  not:
+    any:
+      # A `this` anywhere under a type — `add(): this`, `x: this['k']`.
+      - inside:
+          any:
+            - kind: type_annotation
+            - kind: this_type
+            - kind: predefined_type
+          stopBy: end
+      # The `this` *parameter* itself, which is a direct child of its parameter
+      # node. No `stopBy`: widening this to the whole subtree would also exempt
+      # a runtime `this` in a default value.
+      - inside:
+          kind: required_parameter
+
+ignores:
+  - "**/*.d.ts"
+  - "**/dist/**"
+  - "**/node_modules/**"

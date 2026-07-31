@@ -300,7 +300,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
     - seam: `plugins/ast-grep-rules/hooks/hooks.json`
     - model: opus — trigger precision is the whole value; too eager and it trains the user to dismiss it (D15)
 
-11. [ ] feat: add /mine to classify and route lesson candidates — **done when:** run against the step-4 fixture corpus it reports all five buckets, declines the entry with no AST form, routes both `needs-type-info` entries toward oxlint type-aware rather than dropping them, and hands the single promotable one to `/rule`
+11. [x] feat: add /mine to classify and route lesson candidates — **done when:** run against the step-4 fixture corpus it reports all five buckets, declines the entry with no AST form, routes both `needs-type-info` entries toward oxlint type-aware rather than dropping them, and hands the single promotable one to `/rule`
     - seam: `plugins/ast-grep-rules/skills/mine/SKILL.md`
     - model: sonnet — the deterministic work already happened in step 4
 

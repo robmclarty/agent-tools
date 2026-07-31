@@ -1,0 +1,26 @@
+id: no-extends-inheritance
+# Interface extension must stay legal — it is a shape, not a runtime hierarchy —
+# so it leads `valid:`, alongside the composition this rule steers toward. The
+# `implements`-only case is in `invalid:` because `class_heritage` covers the
+# whole clause, not just the `extends` keyword.
+valid:
+  - |
+    interface base { id: string }
+    interface extended extends base { name: string }
+  - |
+    type animal = { kind: string }
+    type cat = { animal: animal; meow: () => void }
+
+invalid:
+  - |
+    class Dog extends Animal {
+      bark() {}
+    }
+  - |
+    class Square extends Shape implements Printable {
+      area() { return 1 }
+    }
+  - |
+    class Report implements Printable {
+      print() {}
+    }

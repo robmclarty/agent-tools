@@ -1,0 +1,35 @@
+id: no-default-export
+language: TypeScript
+severity: error
+message: "Use a named export: `export const fn = () => { ... }` — not `export default fn`."
+note: |
+  A default export has no stable name. `export default parse_config` can be
+  imported as `import whatever from './parse-config'`, so grepping for the
+  identifier finds the definition and none of its uses. Named exports keep one
+  spelling across every file, which is what makes a codebase searchable — by a
+  person and by a model reading it for the first time.
+
+      export const parse_config = (raw: string): config => { /* … */ }
+
+  Re-exports are fine: `export { parse_config } from './parse-config.ts'`.
+
+  The real exception is a framework that mandates a default export — a Next.js
+  page, a Vite or Vitest config. Config files are already excluded by `ignores`
+  below; for anything else, say so on the line:
+
+      export default handler // ast-grep-ignore: no-default-export
+
+  That trailing form is the one that works. `ast-grep-ignore-next-line` on its own
+  line does not. Path-wide exceptions go in `ignores` below.
+
+rule:
+  any:
+    - pattern: export default $_
+    - pattern: export { $_ as default }
+    - pattern: export { $_ as default, $$$ }
+
+ignores:
+  - "**/*.d.ts"
+  - "**/dist/**"
+  - "**/node_modules/**"
+  - "**/*.config.ts"

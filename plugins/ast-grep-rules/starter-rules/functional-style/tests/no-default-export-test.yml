@@ -1,0 +1,24 @@
+id: no-default-export
+# Re-exports are the shape most likely to be caught by an over-broad version of
+# this rule, so both forms are pinned valid: a plain named re-export, and one that
+# renames a *source* default into a named binding. `invalid:` covers all three
+# spellings the rule lists, including `export { x as default }`.
+valid:
+  - |
+    export const foo = () => 1
+  - |
+    export { bar } from './bar.ts'
+  - |
+    export { default as baz } from './baz.ts'
+  - |
+    export type user = { id: string }
+
+invalid:
+  - |
+    const foo = 1
+    export default foo
+  - |
+    export default function bar() { return 1 }
+  - |
+    const qux = 2
+    export { qux as default }

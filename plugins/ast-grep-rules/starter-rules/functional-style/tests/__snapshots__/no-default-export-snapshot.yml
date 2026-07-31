@@ -1,0 +1,25 @@
+id: no-default-export
+snapshots:
+  ? |
+    const foo = 1
+    export default foo
+  : labels:
+    - source: export default foo
+      style: primary
+      start: 14
+      end: 32
+  ? |
+    const qux = 2
+    export { qux as default }
+  : labels:
+    - source: export { qux as default }
+      style: primary
+      start: 14
+      end: 39
+  ? |
+    export default function bar() { return 1 }
+  : labels:
+    - source: export default function bar() { return 1 }
+      style: primary
+      start: 0
+      end: 42

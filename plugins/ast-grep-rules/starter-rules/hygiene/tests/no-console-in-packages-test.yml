@@ -1,0 +1,26 @@
+id: no-console-in-packages
+# All five console methods are matched separately by the rule, so all five are
+# pinned — an `any:` list is exactly the kind of thing that loses a branch in a
+# later edit. `valid:` covers the two sanctioned replacements plus an injected
+# logger, which must not be mistaken for the global.
+valid:
+  - |
+    export const make = (opts: { log: (m: string) => void }) => {
+      opts.log('hi')
+    }
+  - |
+    export const to_diagnostics = () => ({ messages: ['hi'] })
+  - |
+    export const run = (logger: logger_t) => logger.log('hi')
+
+invalid:
+  - |
+    export const run = () => { console.log('hello') }
+  - |
+    const fail = () => { console.error('boom') }
+  - |
+    const warn_user = () => { console.warn('careful') }
+  - |
+    const info = () => { console.info('fyi') }
+  - |
+    const dbg = () => { console.debug('dbg') }
