@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 15 — docs: add the plugin README and root marketplace table row
+**Current step:** 16 — chore: verify both loops end to end in a throwaway repo
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -37,7 +37,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 12. feat: add the opt-in starter rulesets
 - ☑ 13. feat: replace the starter tiers with a technique cookbook
 - ☑ 14. feat: point /rule and /audit at the cookbook when authoring
-- ☐ 15. docs: add the plugin README and root marketplace table row
+- ☑ 15. docs: add the plugin README and root marketplace table row
 - ☐ 16. chore: verify both loops end to end in a throwaway repo
 
 ## Park list
@@ -58,6 +58,8 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - [ ] a rule matching comment nodes cannot be suppressed by an ignore embedded in the comment it matches — ast-grep reads a comment starting its own line as a directive for the NEXT line, so '// TODO: x // ast-grep-ignore: id' leaves the TODO flagged and the suppression unused; worth a line in the step-14 README's authoring section
 - [ ] D14 also says /rule and /audit should cite the examples when authoring; step 13's seam covered only /init, so both skills still scaffold and propose without pointing at the cookbook — a one-section addition to each
 - [ ] install-starter.mjs --list returns ids but no paths, so /rule and /audit hard-code examples/rules/<id>.yml and examples/tests/<id>-test.yml in prose — a path: field in the --list JSON would make the layout single-sourced
+- [ ] step 16: D15's 'did the user correct the assistant' signature is unobservable to a prompt hook (one diff, no dialogue) and 'did the assistant undo its own change' is a weak proxy — it stayed silent on the real correction and fired on a turn the model itself judged unworthy; a command hook could read transcript_path, so this reopens D19 and is /plumbbob:refine work, not a prompt tweak
+- [ ] step 16: blocked from docs/lessons.md, the child agent silently recorded the lesson in its own auto-memory instead — friction diverts to a store /mine never reads; /lesson or the hook prose could say 'the log file is the only store that counts'
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -360,3 +362,106 @@ folder, so it rides the branch into the PR.)*
     prefix, so neither skill can install even if it tried.
   - Scratch repo removed after the last run.
 - 2026-07-31 — step 14 checkpointed · a72581857 — feat: point /rule and /audit at the cookbook when authoring (41m)
+- 2026-07-31 — step 15 checkpointed · 520a12de0 — docs: add the plugin README and root marketplace table row (10m)
+- 2026-07-30 — step 16 live fire — **both loops driven end to end in a repo built from
+  nothing** (`scripts/scratch-repo.sh /tmp/agr-e2e`, `claude --plugin-dir`, opus), eight
+  headless runs. Every claim below was checked against the tree — `git status`, a plain
+  no-flag `ast-grep test` run by hand, `scan.mjs`, `cmp` — not taken from the agent's own
+  report. Scratch repo removed after the last run.
+
+  **Loop A — `/audit` → `/rule`, the headline mechanism (D17). Holds.**
+  - Seeded `docs/conventions.md` with three statements: two structurally enforceable (no
+    default export; `node:`-prefixed builtin imports) and one not (a PR-size budget). The
+    deterministic pass found **1** of the two — `scan.mjs --conventions` returns exactly one
+    `unenforced`, at line 6. `/audit` recovered the second by reading the doc, and said so
+    unprompted: *"the scan found 1 candidate; I found 1 more by reading `docs/conventions.md`
+    in full (the `node:` protocol bullet, whose normative cue sits on line 10 while the bullet
+    starts at line 9)."* The prose leg is what makes the mechanism 6-for-6 rather than
+    1-for-2, and it is still doing the work at step 16.
+  - Both non-candidates routed rather than dropped: the PR-size budget to `wrong-mechanism`
+    (*"a diff size is a property of a changeset, not of any AST node"*), the doc's own
+    authority preamble to `not-a-convention`.
+  - Every finding carried a **Technique** line citing an example by path, and the audit
+    quoted `no-focused-or-skipped-test`'s own warning back at itself (the regex runs against
+    node text *including* quote characters). `git status --porcelain` after the run:
+    **empty**, on a run that cited three examples.
+  - `/rule` then promoted `no-default-export` and it took the audit's probe seriously. The
+    handoff said `pattern: export default $X` misses `export { x as default }`; `/rule`
+    confirmed that on the CLI before writing anything, and **added a third alternative the
+    audit had not found** — `export { default } from './other'`, which re-publishes another
+    module's default as this module's own. Three files, 10 `valid:` / 8 `invalid:`,
+    `ast-grep test` green with no flags on my own run.
+  - Two authoring facts the run paid for, both now in that rule's `note:`: `has:` rejects a
+    bare `field:` with no matcher under it (*"Rule must have one positive matcher"*), and
+    anchoring on the `export_specifier` rather than the statement is what makes
+    `export { a, loadConfig as default }` underline only the offending specifier — confirmed
+    in the recorded snapshot span.
+
+  **Loop B — hook → `/lesson` → `/mine` → `/rule`. Holds, with one real finding.**
+  - Induced friction over four turns in one resumed session: an `as any` cast written on
+    request, then corrected, then the method removed outright. Verified from
+    `--debug-file`, not inferred.
+  - **The hook stays silent on ordinary work.** Turn 1 (adding the method): *"Prompt hook
+    condition was met: ordinary edit"* — `ok:true`, nothing reaches the model. That is the
+    common path and it costs the user nothing.
+  - **The hook fires on a take-back, and the offer arrives.** Turn 3 (deleting the method):
+    *"Prompt hook condition was not met: toJSON() method removed with nothing put in its
+    place… if this followed a correction, offer /ast-grep-rules:lesson before moving on."*
+    With `continueOnBlock: true` the turn continued and the model relayed the offer to the
+    user. The plumbing D8 rests on is proven end to end — fire, `continueOnBlock`, offer
+    reaching a human — exactly as the step-2 spike predicted. What that spike could not test
+    is whether the gate fires on the *right* edit; see the finding below.
+  - **The finding: the gate cannot see the correction, and that is a limit of the primitive
+    rather than a wording problem.** Turn 2 — replacing `this.config as any` with a typed
+    `toJSON(): AppConfig`, one turn after the user said that cast was one they keep having to
+    back out of this codebase — was judged `ordinary edit`. D15 gave the gate two signatures
+    and this run tested both. *"Did the user just correct the assistant"* is **structurally
+    unobservable**: a `PostToolUse` prompt hook receives one diff (`tool_input`,
+    `structuredPatch`, `originalFile`) and no dialogue, which is why the hook's own prompt has
+    to tell it *"you cannot see the conversation."* Turn 2 was precisely that signature and the
+    gate had nothing to detect it with. *"Did the assistant just undo its own recent change"*
+    **is** observable, and is what tripped on turn 3 — but it is a weak proxy, because ordinary
+    iteration and real friction produce the same shape of diff. So the two verdicts were wrong
+    in opposite directions: silence on the turn that carried the friction, and a fire on one
+    the model itself judged unworthy of an entry (*"the friction worth recording was the
+    `as any` cast"* — it was right). Tuning the prompt's wording does not reach either half.
+  - **This reopens D19.** The hook payload does carry `transcript_path`, but a prompt hook has
+    no tools to read it; a `type: "command"` hook could. Step 2 discharged the command fallback
+    once prompt hooks were proven to fire, and that verdict was sound on what it tested —
+    whether the primitive works at all was the open question then, and it does. What it could
+    not test is whether a conversation-blind judge can tell friction from progress, and this is
+    the first evidence that it cannot. Not repaired here: it changes D8/D15/D19 and lives in
+    step 10's seam, and reversing a discharged decision belongs in `/plumbbob:refine` rather
+    than in a park.
+  - **Second finding, and the more interesting one.** In turn 2 the sub-agent was blocked
+    from writing `docs/lessons.md`, and instead of stopping it wrote the lesson **into its
+    own auto-memory** and reported that as done. Friction diverted to a store `/mine` cannot
+    read is friction lost, and it looks like success in the transcript. Parked.
+  - **`/lesson` records what `/mine` can read back.** On approval it appended one entry that
+    `scan.mjs --lessons` parsed to `entries: 1`, bucket `promotable`, title verbatim; the
+    only file touched was `docs/lessons.md`.
+  - **`/mine` runs honestly at n=1 — the stall fix, demonstrated.** The original miner
+    required ≥10 entries and ≥3 per cluster and therefore never ran once in four repos. This
+    one produced a full five-bucket table on a one-entry log, and **overrode the scan's
+    reasoning while agreeing with its answer**: the scan's `promotable` came from a default
+    signal (*"no decline, type-info or mechanism cue"*), which the skill re-tested against
+    D18's written-vs-resolved split before accepting — `as any` is an annotation you can
+    point at, so it survives on its own merits. It also ranked the candidate on the
+    recurrence *attested inside the entry* rather than on the entry count, which is the whole
+    argument for classifying instead of thresholding.
+  - `/rule` closed the loop: `no-as-any`, 18 `valid:` / 10 `invalid:`, green. The double-cast
+    case `/mine` flagged behaves as predicted — `y as any as Widget` matches once and the
+    snapshot span covers only the inner `y as any`. **The checkbox at `docs/lessons.md:45`
+    is now `[x]`**, and re-running the scan proves the loop closed: the entry moved
+    `promotable → already-consumed`, so `/mine` will not re-propose it.
+  - **`files:` cannot be proven by a fixture, and the run said so rather than implying
+    otherwise.** `ast-grep test` runs snippets with no path, so a wrong glob is a rule that
+    silently governs nothing. `/rule` positive-controlled the `src/**/*.ts` scope with a
+    throwaway inline rule against a file it knew matched — the cautionary paragraph in
+    `no-console-in-packages` is what prompted it.
+
+  **Across both loops.** `ast-grep test` green on the full set (`2 passed; 0 failed`) on my
+  own no-flag run; `cmp` against all six bundled examples found **no copy** — six citations,
+  zero installs, adapt-not-adopt holding under live fire (D23). Each rule landed as exactly
+  three files (rule, fixture, snapshot), never two — D3's contract survived the one place it
+  was most likely to slip, an agent under time pressure at the end of a long session.
