@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 13 — feat: replace the starter tiers with a technique cookbook
+**Current step:** 14 — feat: point /rule and /audit at the cookbook when authoring
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -35,9 +35,10 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 10. feat: add a PostToolUse hook as the friction trigger
 - ☑ 11. feat: add /mine to classify and route lesson candidates
 - ☑ 12. feat: add the opt-in starter rulesets
-- ☐ 13. feat: replace the starter tiers with a technique cookbook
-- ☐ 14. docs: add the plugin README and root marketplace table row
-- ☐ 15. chore: verify both loops end to end in a throwaway repo
+- ☑ 13. feat: replace the starter tiers with a technique cookbook
+- ☐ 14. feat: point /rule and /audit at the cookbook when authoring
+- ☐ 15. docs: add the plugin README and root marketplace table row
+- ☐ 16. chore: verify both loops end to end in a throwaway repo
 
 ## Park list
 
@@ -56,6 +57,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - [ ] D22's suppression claim does not hold on ast-grep 0.45.0: '// ast-grep-ignore-next-line: <id>' behaves identically to '// ast-grep-ignore: <id>' (both scoped to the named id, both suppress the following line) — foundry's bf33067 rationale is version-specific at best; the cookbook notes document the trailing form without repeating the 'the other one is broken' claim
 - [ ] a rule matching comment nodes cannot be suppressed by an ignore embedded in the comment it matches — ast-grep reads a comment starting its own line as a directive for the NEXT line, so '// TODO: x // ast-grep-ignore: id' leaves the TODO flagged and the suppression unused; worth a line in the step-14 README's authoring section
 - [ ] D14 also says /rule and /audit should cite the examples when authoring; step 13's seam covered only /init, so both skills still scaffold and propose without pointing at the cookbook — a one-section addition to each
+- [ ] install-starter.mjs --list returns ids but no paths, so /rule and /audit hard-code examples/rules/<id>.yml and examples/tests/<id>-test.yml in prose — a path: field in the --list JSON would make the layout single-sourced
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -323,3 +325,37 @@ folder, so it rides the branch into the PR.)*
   - Scratch repo removed after the last run.
 - 2026-07-31 — step 11 checkpointed · a6e0f041a — feat: add /mine to classify and route lesson candidates (1968m)
 - 2026-07-31 — step 12 checkpointed · 7375716e6 — feat: add the opt-in starter rulesets (1 drift, 26m)
+- 2026-07-31 — step 13 checkpointed · 9eddf8eae — feat: replace the starter tiers with a technique cookbook (1 drift, 27m)
+- 2026-07-30 — step 14 live fire — `/ast-grep-rules:audit` once and `/ast-grep-rules:rule` twice,
+  driven headlessly against a scratch repo (`scripts/scratch-repo.sh`, `claude --plugin-dir`)
+  seeded with a five-convention `docs/conventions.md` plus a `CLAUDE.md` line, spanning four of
+  the six technique rows and two distractors.
+  - **Both halves of the done-when hold.** Every one of `/audit`'s five `enforceable` findings
+    carried a **Technique** line naming the construct and citing the example by path — the
+    `kind:` claim to `no-enum-declaration`, the console-under-`src/` claim to
+    `no-console-in-packages`, the TODO claim to `no-unlinked-todo`. Both `/rule` runs were
+    ban-a-construct ids (`no-class-declaration`, `no-namespace-declaration`) and both cited the
+    `kind:` example. The type-resolution distractor still routed to `needs-type-info` and the
+    double-hedged one to `not-a-convention`, so the lookup narrowed the work list rather than
+    widening it.
+  - **The ordering is proved from the stream, not from the agent's own account.** Run 2 was
+    captured with `--output-format stream-json`: `examples/rules/no-enum-declaration.yml` is read
+    at tool calls 10 and 12, `scaffold-rule.mjs` fires at 11, and the first `Write` to
+    `rules/no-namespace-declaration.yml` lands at 14. The example is open before any YAML exists.
+  - **By reference, verified against the tree.** `git status --porcelain` after `/audit` was
+    **empty** and the rules dir held only its `.gitkeep`, on a run citing four distinct examples.
+    Each `/rule` run added exactly its own three files; `cmp` against all six bundled rules found
+    no copy. `ast-grep test` green both times, 2 passed.
+  - **Adapt-don't-adopt showed up unprompted, which is the point of the encodes: line.** The
+    audit flagged that `no-console-in-packages`'s `files: packages/**/*.ts` must become
+    `src/**/*.ts` for this repo, quoting that example's own note on why a rule governing nothing
+    and a rule finding nothing print identically. Neither `/rule` run produced a `kind:` rule
+    naming one spelling: run 1 covered `class_declaration` / `abstract_class_declaration` /
+    `class`, run 2 found that legacy `module Json {}` is kind `module` rather than
+    `internal_module` — both credited to the cautionary paragraph in the `kind:` example.
+  - **One defect the live fire caught.** Run 2 opened the example with `Bash cat` on a
+    `${CLAUDE_PLUGIN_ROOT}` path, which is in neither skill's `allowed-tools`; it only worked
+    because the harness ran wide open. Both skills now say **Read**, and say why. The `--list`
+    preflight is granted as the exact string `install-starter.mjs --list` rather than a `*`
+    prefix, so neither skill can install even if it tried.
+  - Scratch repo removed after the last run.

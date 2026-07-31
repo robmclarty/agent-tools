@@ -1,7 +1,7 @@
 ---
 name: audit
 description: Diff the conventions this repo's docs already state against the ast-grep rules it actually enforces, and report the gaps. Use when adopting ast-grep in a repo that already has convention docs, when asked what should have a rule, what the docs say but nothing checks, or which conventions are unenforced — and after /ast-grep-rules:init. Reports only; /ast-grep-rules:rule does the writing.
-allowed-tools: Read, Glob, Grep, Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/scan.mjs*), Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs*), Bash(pnpm exec ast-grep*), Bash(npx --no-install ast-grep*), Bash(yarn exec ast-grep*), Bash(./node_modules/.bin/ast-grep*), mcp__ast-grep__dump_syntax_tree, mcp__ast-grep__find_code, mcp__ast-grep__find_code_by_rule, mcp__ast-grep__test_match_code_rule
+allowed-tools: Read, Glob, Grep, Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/scan.mjs*), Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs*), Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs --list), Bash(pnpm exec ast-grep*), Bash(npx --no-install ast-grep*), Bash(yarn exec ast-grep*), Bash(./node_modules/.bin/ast-grep*), mcp__ast-grep__dump_syntax_tree, mcp__ast-grep__find_code, mcp__ast-grep__find_code_by_rule, mcp__ast-grep__test_match_code_rule
 ---
 
 # audit
@@ -32,9 +32,15 @@ the config names.
 ## Preflight context
 
 - Conventions scan: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/scan.mjs --conventions`
+- Example cookbook: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs --list`
 
-Read the JSON before anything else. It carries the docs that were read, every rule id
+Read the scan JSON before anything else. It carries the docs that were read, every rule id
 currently enforced, and its own first-pass split into `enforced` and `unenforced`.
+
+The cookbook JSON is the second one: six worked example rules, each with what it
+`demonstrates` and the `uses` list of the constructs its body contains. It is the
+technique lookup for step 2 and the citation for step 5 — a **catalogue to read from, not
+an install menu**. This skill installs nothing and writes nothing.
 
 | Preflight | Meaning | Do |
 |---|---|---|
@@ -70,6 +76,52 @@ needs this most. Say so and audit normally.
 - **Not-expressible is a finding, not a failure.** Routing a convention to oxlint or to
   the check script is a real outcome that closes the loop honestly. Silently dropping it
   is what leaves the same gap open next quarter.
+- **Cite the cookbook by reference.** An example is read at its path under `examples/` and
+  named in the report. Never install one — this skill has no installer and no `Write`, and
+  an audit that cites six examples still leaves the rules dir exactly as it found it.
+
+## The technique lookup
+
+Every candidate that survives into `enforceable` names the ast-grep construct that would
+express it, and cites the worked example that demonstrates that construct. Two reasons,
+and the second is the load-bearing one:
+
+- The handoff to `/ast-grep-rules:rule` arrives concrete — a construct and a worked
+  example, rather than a sentence that skill has to re-derive both from.
+- **It is the enforceability test.** "Could a parser see a violation of this?" is easy to
+  answer optimistically in the abstract, and step 2's whole job is to answer it honestly.
+  Naming the construct is what makes the answer falsifiable. A statement you cannot name a
+  construct for is a candidate for `needs-type-info` or `wrong-mechanism`, not for the
+  work list.
+
+| The shape of the stated claim | The construct | The example |
+|---|---|---|
+| **A construct is named and banned** — "never declare a class", "no enums", "no namespaces". The thing has a node kind, and every instance has a different body. | `kind:` | `no-enum-declaration` |
+| **A call or expression is named** — "always go through the typed wrapper", "nothing calls `.then()`". You can write the violating line as code. | `pattern:`, with `$X` and `$$$ARGS` | `no-promise-then` |
+| **The shape is right but the claim turns on a name** — "`it.only` never lands", where the same syntax is fine on anything else. | `pattern:` + `constraints:` + `regex:` | `no-focused-or-skipped-test` |
+| **"X, except Y"** — a broad claim with a sanctioned form carved out; or a claim about the text of a comment or string, which has no structure inside it. | `all:` / `any:` / `not:` / `regex:` | `no-unlinked-todo` |
+| **The claim is positional** — "no `await` inside a `forEach` callback", "nothing under `runtime/` may import X". It is about where a node sits or what it contains. | `inside:` / `has:`, with `stopBy: end` | `no-async-array-callback` |
+| **The claim governs one tree** — "packages may not log", a doc that only speaks for one workspace. | top-level `files:`, and `ignores:` | `no-console-in-packages` |
+
+Open the example with the **Read** tool before citing it —
+`${CLAUDE_PLUGIN_ROOT}/examples/rules/<id>.yml`, with its fixture at
+`${CLAUDE_PLUGIN_ROOT}/examples/tests/<id>-test.yml`. Not `cat`: these are plugin paths
+outside the repo, and a session with tighter Bash permissions than yours will stop on one.
+The `note:` block is
+where the technique is taught and where its failure modes are — a `kind:` that covers only
+one of a construct's several spellings, a `regex:` that finds the word in every string in
+the repo. Reading it is also what stops you promising a shape the construct cannot hold.
+
+Two cautions:
+
+- **Do not rank by whether an example exists.** All six techniques are in the cookbook, so
+  every enforceable claim maps to one; that says nothing about which candidate is worth
+  doing first. Ranking is step 4's job and rests on live violations, blast radius and
+  sharpness.
+- **The example's policy is not a recommendation.** Each carries an **encodes:** line
+  naming the preference it happens to enforce, precisely so it cannot be read as a
+  default. You are citing the technique. The convention being enforced is the one this
+  repo already wrote down.
 
 ## Steps
 
@@ -150,8 +202,12 @@ to**:
   enforcing anyway, say the hedge is what you are proposing to harden, and let the human
   decide.
 
-Two more checks before anything lands in `enforceable`:
+Three more checks before anything lands in `enforceable`:
 
+- **Can you name the construct that would express it?** Take it to **The technique
+  lookup** above and come back with a construct and the example that demonstrates it. If
+  nothing in the table fits, that is the enforceability answer arriving late — re-judge
+  the statement rather than promoting it and hoping `/ast-grep-rules:rule` finds a way.
 - **Does another tool already cover it?** Grep the repo's lint config (`oxlint.json`,
   `.oxlintrc.json`, `eslint.config.*`, `tsconfig.json` compiler options). A rule that
   duplicates a linter the repo already runs is pure maintenance cost — that is
@@ -218,6 +274,10 @@ because that is what it asks for first:
 - **The citation** — `docs/conventions.md:12`, and the sentence, quoted.
 - **Must fail** — one concrete, compilable line that violates it.
 - **Must pass** — one concrete near-miss line that must stay quiet.
+- **Technique** — the construct that expresses it, and the example that demonstrates that
+  construct, by path: *"`kind:` — see `examples/rules/no-enum-declaration.yml`."* One
+  line. Say once, at the top of the work list, that these are read rather than installed,
+  so a report citing three examples cannot be mistaken for three rules about to land.
 - **Live hits**, if step 4 found any.
 
 **The routed buckets, each with its statement and its destination.** `needs-type-info`
@@ -238,9 +298,11 @@ good result and a real answer — do not manufacture candidates to fill the repo
 
 ### 6. Hand off
 
-Offer the top candidate to `/ast-grep-rules:rule` by id, carrying the citation and both
-samples so it starts from step 2 of its own flow rather than re-deriving them. Wait for the
-user to pick — they may want a different one, or none.
+Offer the top candidate to `/ast-grep-rules:rule` by id, carrying the citation, both
+samples and the construct-plus-example from the lookup, so it starts from step 2 of its own
+flow rather than re-deriving them. That skill has the same cookbook in its own preflight
+and will read the example itself; handing it over means it does not have to guess which.
+Wait for the user to pick — they may want a different one, or none.
 
 Then, two follow-ups worth naming once:
 
@@ -278,8 +340,10 @@ Then, two follow-ups worth naming once:
   `unenforced` list and it means nothing. Read the doc; step 1 is the whole audit here, and
   the report should say the scan contributed nothing.
 - **A monorepo where a doc governs one package.** Say which tree each convention actually
-  governs, and note it as the `files:` glob the eventual rule will need. A repo-wide rule
-  for a package-local convention is a rule that gets suppressed everywhere.
+  governs, and note it as the `files:` glob the eventual rule will need —
+  `examples/rules/no-console-in-packages.yml` is the worked case, including why `files:`
+  is a sibling of `rule:` rather than something inside it. A repo-wide rule for a
+  package-local convention is a rule that gets suppressed everywhere.
 - **The same convention stated in two docs.** Report it once, cite both locations.
 - **A convention already declined once.** You cannot know that from here — this skill has
   no memory and no store. That is the point of suggesting the rule id in the doc line, and

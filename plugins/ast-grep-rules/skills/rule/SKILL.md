@@ -1,7 +1,7 @@
 ---
 name: rule
 description: Add a new ast-grep structural lint rule to this repo, together with the *-test.yml fixture that proves it works. Use when a convention isn't enforced yet, when the same mistake has now happened twice, or when /audit or /mine hands over a candidate. The rule is not finished until `ast-grep test` passes.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs*), Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/scaffold-rule.mjs*), Bash(pnpm exec ast-grep*), Bash(npx --no-install ast-grep*), Bash(yarn exec ast-grep*), Bash(./node_modules/.bin/ast-grep*), Bash(pnpm scaffold*), Bash(npm run scaffold*), Bash(yarn scaffold*), mcp__ast-grep__dump_syntax_tree, mcp__ast-grep__test_match_code_rule, mcp__ast-grep__find_code, mcp__ast-grep__find_code_by_rule
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs*), Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/scaffold-rule.mjs*), Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs --list), Bash(pnpm exec ast-grep*), Bash(npx --no-install ast-grep*), Bash(yarn exec ast-grep*), Bash(./node_modules/.bin/ast-grep*), Bash(pnpm scaffold*), Bash(npm run scaffold*), Bash(yarn scaffold*), mcp__ast-grep__dump_syntax_tree, mcp__ast-grep__test_match_code_rule, mcp__ast-grep__find_code, mcp__ast-grep__find_code_by_rule
 ---
 
 # rule
@@ -24,9 +24,15 @@ required; ask if you have neither.
 ## Preflight context
 
 - Resolver result: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs`
+- Example cookbook: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs --list`
 
-Read the JSON before anything else. It carries the rules dir, the tests dir, the command
-that runs ast-grep in *this* repo, and whether a repo-local scaffolder exists.
+Read the resolver JSON before anything else. It carries the rules dir, the tests dir, the
+command that runs ast-grep in *this* repo, and whether a repo-local scaffolder exists.
+
+The cookbook JSON is the second one, and it is a **lookup table, not an install menu**:
+six worked example rules, each carrying what it `demonstrates` and the `uses` list of the
+constructs its body actually contains. Step 4 matches the rule you are about to write
+against that list. Nothing in this skill installs from it.
 
 | Preflight | Meaning | Do |
 |---|---|---|
@@ -45,6 +51,10 @@ them to `/ast-grep-rules:init`, which offers to add one.
   `PATH`. Always the preflight's `ast_grep_command`, with arguments appended.
 - **Never write a rule file by hand.** Scaffold it, then edit the TODOs. Hand-written
   YAML is how the four source repos ended up with six variants of the same rule.
+- **Cite the cookbook, never install from it.** An example is read, at its path under
+  `examples/`, and named in the report. A run that cites three examples still writes zero
+  files from them — the only rule this skill produces is this repo's own, at the id the
+  user asked for.
 - **Never `-U` before the rule is right.** `-U` freezes whatever the rule currently does,
   so recording early just enshrines the wrong answer as the expected one.
 - **Never edit source to satisfy a new rule without asking.** Report the hits, offer the
@@ -93,7 +103,7 @@ configured in a good number of repos), use it, in this order:
 
 **If it is not available** — and it must not be required — the CLI does the same work:
 `<ast_grep_command> run --pattern '<pattern>' --lang ts <path>` to check a pattern against
-real files, and the fixture loop in step 6 for everything else. Never treat a missing MCP
+real files, and the fixture loop in step 7 for everything else. Never treat a missing MCP
 server as a blocker; say you are on the CLI path and continue.
 
 **Probe against files that already exist.** The repo's own sources are the best test
@@ -102,7 +112,46 @@ material and cost nothing. If you genuinely need a scratch sample, put it in the
 `.ts` file into the repo. This skill's deliverable is three files; a fourth left behind in
 someone's working tree is litter, and you may not be able to remove it.
 
-### 4. Scaffold both files
+### 4. Find the example that demonstrates this shape
+
+You now know what the rule must catch (step 1) and what the tree actually looks like
+(step 3). Before any YAML, name the ast-grep construct that expresses it — and read the
+worked example that demonstrates that construct. The cookbook is six rules, each chosen
+to teach exactly one thing. The preflight `--list` carries their `demonstrates` and `uses`
+lines; the file itself carries the reasoning.
+
+| The claim you are enforcing | The construct | Read |
+|---|---|---|
+| **Ban a construct outright** — "no enums", "no classes", "no namespaces". It has a node kind, and every instance has a different body, so there is no useful pattern for it. | `kind:` | `no-enum-declaration` |
+| **Ban a call or expression shape** — "nothing calls `.then()`", "no bare `JSON.parse`". You can write the offending line as code. | `pattern:`, with `$X` and `$$$ARGS` | `no-promise-then` |
+| **The pattern is right but too broad, and the difference is a name** — `it.only` yes, `router.only` no. | `pattern:` + `constraints:` + `regex:` | `no-focused-or-skipped-test` |
+| **"This, but not that"** — a broad claim with the sanctioned form carved back out; or the node is a leaf (a comment, a string) with no structure to grip. | `all:` / `any:` / `not:` / `regex:` | `no-unlinked-todo` |
+| **The claim is about context** — where the node sits, or what it contains. "No `await` inside a `forEach` callback." | `inside:` / `has:`, with `stopBy: end` | `no-async-array-callback` |
+| **The convention governs part of the tree** — "packages may not log", "this applies under `src/` only". | top-level `files:`, and `ignores:` | `no-console-in-packages` |
+
+Open it with the **Read** tool — `${CLAUDE_PLUGIN_ROOT}/examples/rules/<id>.yml`, with its
+fixture alongside at `${CLAUDE_PLUGIN_ROOT}/examples/tests/<id>-test.yml`. Not `cat`:
+these are plugin paths outside the repo, and a session with tighter Bash permissions than
+yours will stop on one. The `note:` block is
+where the technique is taught, including the failure modes that cost the most time: one
+construct wearing several kind names, a `regex:` that finds the word in every string you
+have, a comment rule that cannot be suppressed by a comment on its own line. The fixture
+shows how much `valid:` coverage the technique needs before it can be trusted.
+
+**Two fitting is ordinary.** Most real rules compose — `no-async-array-callback` is itself
+`kind:` plus `all:` plus `regex:` plus a nested `inside:`/`has:`. Read both.
+
+**Nothing fitting is a signal, not a gap in the cookbook.** If you cannot name a construct
+after dumping the tree, the claim may not be structural at all. Go back to step 2's
+type-information test before you scaffold anything.
+
+Take the technique and leave the policy. Every example also enforces something, because a
+rule enforcing nothing would demonstrate nothing, and each one says which on an
+**encodes:** line beside its **demonstrates:** line. That line is a caveat, not a
+recommendation: none of these is a default, and the rule you are about to write is this
+project's.
+
+### 5. Scaffold both files
 
 Branch on `scaffold_command` from the preflight. This is a capability flag, not two
 different skills — both branches end at the same two files.
@@ -134,7 +183,7 @@ relaying verbatim.
 samples that cannot match it, so `<ast_grep_command> test` fails until you finish. Do not
 "fix" that by deleting the fixture — finishing it is the job.
 
-### 5. Fill in the rule
+### 6. Fill in the rule
 
 Three TODOs, each a judgment call:
 
@@ -148,10 +197,11 @@ Three TODOs, each a judgment call:
   `// ast-grep-ignore: <id>` comment on the offending line; the `ast-grep-ignore-next-line`
   form that older rules in the wild document **does not work**, so never write it into a
   note, not even as a counter-example.
-- **`rule:`** — prefer `kind:` over `pattern:` where you can; `kind: class_declaration`
-  tolerates syntax it has never seen and `pattern: class $X { $$$ }` does not. Use
-  `stopBy: end` on relational rules (`inside`, `has`). Use `not:` sparingly — a narrower
-  positive rule reads better than a negated broad one.
+- **`rule:`** — write the construct step 4 named, with that example open. Prefer `kind:`
+  over `pattern:` where you can; `kind: class_declaration` tolerates syntax it has never
+  seen and `pattern: class $X { $$$ }` does not. Use `stopBy: end` on relational rules
+  (`inside`, `has`). Use `not:` sparingly — a narrower positive rule reads better than a
+  negated broad one.
 - **`files:`** ships commented out, because no source glob is portable. Uncomment and set
   it if the rule should only govern part of the tree; leave it off to let the rule apply
   everywhere ast-grep already scans.
@@ -159,7 +209,7 @@ Three TODOs, each a judgment call:
 If the rule has known false positives you cannot design away, `severity: warning` is the
 honest setting. Errors block; warnings inform.
 
-### 6. Fill in the fixture, then drive it green
+### 7. Fill in the fixture, then drive it green
 
 Replace both placeholder lists with real samples. `invalid:` is every shape the rule must
 catch; `valid:` is every near-miss it must leave alone — that second list is what catches
@@ -180,9 +230,9 @@ which you have:
 | Marker | Meaning |
 |---|---|
 | `.M` | **Missing** — an `invalid:` case reported nothing. The rule does not match what it must. |
-| `.W` | **Wrong/missing snapshot** — the rule matched, but no recorded snapshot agrees. That is step 7, not a rule bug. |
+| `.W` | **Wrong/missing snapshot** — the rule matched, but no recorded snapshot agrees. That is step 8, not a rule bug. |
 
-### 7. Record the snapshots
+### 8. Record the snapshots
 
 A fixture with `invalid:` cases is **not green until its snapshot exists** — `ast-grep
 test` fails with *"Test failed due to mismatching snapshots"* even when the rule matches
@@ -193,7 +243,7 @@ exactly the right code. So this step is part of finishing, not an extra:
 <ast_grep_command> test       # must now be green with no flags at all
 ```
 
-Run `-U` only once the rule is right (step 6), never to make a red test go away. Then
+Run `-U` only once the rule is right (step 7), never to make a red test go away. Then
 **read the snapshot before moving on**: it records the exact source span each match
 highlights, so a span wider than you intended is a rule quietly matching more than you
 think — the one failure mode `valid:` / `invalid:` alone cannot show you.
@@ -202,7 +252,7 @@ Say plainly that a third file was written, and where. If a repo has deliberately
 against snapshots, `--skip-snapshot-tests` is the documented escape hatch — but keeping
 them is the default, and the plain no-flag `test` above is the run that has to be green.
 
-### 8. Preview what it finds in code that already exists
+### 9. Preview what it finds in code that already exists
 
 ```bash
 <ast_grep_command> scan --rule <rules_dir>/<id>.yml
@@ -214,14 +264,16 @@ them without approval**:
 1. **Fix the code** — the usual answer when the rule is right.
 2. **Add the path to `ignores`**, with a comment naming why it is exempt.
 3. **Narrow the rule** — the right answer when legitimate exceptions pile up. More than a
-   couple means the rule is wrong, not the code. Back to step 5.
+   couple means the rule is wrong, not the code. Back to step 6.
 
 A rule that lands red against its own repo is a rule everyone learns to ignore, so say
 plainly how many hits are outstanding.
 
-### 9. Report
+### 10. Report
 
 - The three files written, at their real paths.
+- The example you read in step 4 and the technique you took from it — one line, and say
+  it was read rather than installed, so nobody goes looking for a fourth file.
 - The `ast-grep test` result, from the plain no-flag run.
 - Hits outstanding in existing code, and what was decided about each.
 - If this rule came from a `docs/lessons.md` entry, offer to tick that entry's
@@ -260,6 +312,9 @@ plainly how many hits are outstanding.
   anything else will surface a permission prompt on first use. Expected — approve it and
   continue.
 - **A rule id collides.** The scaffolder refuses and names the file. Fix that rule.
+- **The user wants the cited example installed rather than adapted.** That is
+  `/ast-grep-rules:init`'s cookbook step, which owns the installer; this skill only reads.
+  Hand it over and finish the rule they actually asked for.
 - **The repo has no `testConfigs`.** Stop and route to `/ast-grep-rules:init`. Do not
   invent a tests directory that ast-grep has not been told about — the fixture would never
   run, which is worse than no fixture at all.
