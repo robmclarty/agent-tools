@@ -1,0 +1,58 @@
+id: no-enum-declaration
+language: TypeScript
+severity: warning
+message: "A TypeScript `enum` emits a runtime object and types nominally. Prefer a const object plus a derived union: `const Mode = { on: 'on', off: 'off' } as const; type Mode = (typeof Mode)[keyof typeof Mode]`."
+note: |
+  **demonstrates:** `kind:` — matching a node by its tree-sitter type name, with no
+  pattern at all. This is the tool for catching a *construct* rather than a shape.
+  There is no useful `pattern:` for "any enum", because every enum body is
+  different; there is exactly one kind name.
+
+  **encodes:** a preference for types that erase over constructs that emit runtime
+  code. A codebase that wants enums — for the reverse mapping, for `const enum`
+  inlining, for nominal typing — is not doing anything wrong. Delete the rule and
+  keep the technique.
+
+  Finding the kind is the whole skill, and you do not guess it. Ask the parser:
+
+      ast-grep run --pattern 'enum Color { Red }' --lang ts --debug-query=pattern
+
+  (prefixed however your repo invokes ast-grep — `pnpm exec`, `npx --no-install`,
+  `./node_modules/.bin/`. It is a devDependency, not a global.) The top line of the
+  tree it prints is the kind.
+
+  Two things bite here:
+
+    * **One construct can wear several kinds.** `class Foo {}` is
+      `class_declaration`, but `abstract class Foo {}` is
+      `abstract_class_declaration` — a `kind:` rule naming only the first is
+      silently half a rule, and nothing tells you. Check every spelling of your
+      construct before you trust it. `enum_declaration` happens to cover all four
+      spellings (plain, `const enum`, `export enum`, `declare enum`), which is why
+      it makes a clean example and why the fixture pins all four.
+    * **Kinds are grammar names, not spec names**, and they move when the grammar
+      moves. That is what the fixture is for.
+
+  A `kind:` rule is also the most durable kind of rule: it keeps matching syntax
+  written after you wrote it, where a pattern quietly stops.
+
+  Legitimate exception, on the offending line:
+
+      enum Legacy { A } // ast-grep-ignore: no-enum-declaration
+
+  A trailing `// ast-grep-ignore: <id>` suppresses that line; the same comment
+  standing on the line above suppresses the line below it. Naming the id is what
+  keeps the exception narrow — a bare `// ast-grep-ignore` switches off every rule
+  there, including ones written later. Path-wide exceptions go in `ignores` below.
+
+  Severity is a policy call too. Everything in this cookbook ships as `warning`,
+  because nothing here has earned the right to fail your build — raise it once you
+  have decided you agree with it.
+
+rule:
+  kind: enum_declaration
+
+ignores:
+  - "**/*.d.ts"
+  - "**/dist/**"
+  - "**/node_modules/**"

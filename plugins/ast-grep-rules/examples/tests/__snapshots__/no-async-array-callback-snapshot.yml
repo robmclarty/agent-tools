@@ -1,0 +1,47 @@
+id: no-async-array-callback
+snapshots:
+  ? |
+    const hit = list.find(async (x) => probe(x))
+  : labels:
+    - source: async (x) => probe(x)
+      style: primary
+      start: 22
+      end: 43
+    - source: list.find
+      style: secondary
+      start: 12
+      end: 21
+    - source: list.find(async (x) => probe(x))
+      style: secondary
+      start: 12
+      end: 44
+  ? |
+    const live = rows.filter(async (r) => check(r))
+  : labels:
+    - source: async (r) => check(r)
+      style: primary
+      start: 25
+      end: 46
+    - source: rows.filter
+      style: secondary
+      start: 13
+      end: 24
+    - source: rows.filter(async (r) => check(r))
+      style: secondary
+      start: 13
+      end: 47
+  ? |
+    items.forEach(async (x) => { await load(x) })
+  : labels:
+    - source: async (x) => { await load(x) }
+      style: primary
+      start: 14
+      end: 44
+    - source: items.forEach
+      style: secondary
+      start: 0
+      end: 13
+    - source: items.forEach(async (x) => { await load(x) })
+      style: secondary
+      start: 0
+      end: 45

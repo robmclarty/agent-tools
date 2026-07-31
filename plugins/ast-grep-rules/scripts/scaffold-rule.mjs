@@ -54,7 +54,7 @@ import { resolve_config } from './config.mjs';
 import { inventory_rules } from './scan.mjs';
 
 // ast-grep ids are kebab-case by convention across all four source repos and every
-// bundled tier. Enforcing it here keeps `<id>.yml`, `<id>-test.yml` and the trailing
+// bundled example. Enforcing it here keeps `<id>.yml`, `<id>-test.yml` and the trailing
 // `// ast-grep-ignore: <id>` comment spelling the same thing.
 const KEBAB_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

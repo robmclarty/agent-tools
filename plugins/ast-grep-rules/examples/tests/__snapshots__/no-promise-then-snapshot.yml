@@ -1,0 +1,30 @@
+id: no-promise-then
+snapshots:
+  ? |
+    const body = load(id).then((r) => r.body)
+  : labels:
+    - source: load(id).then((r) => r.body)
+      style: primary
+      start: 13
+      end: 41
+  ? |
+    p.then((v) => v + 1)
+  : labels:
+    - source: p.then((v) => v + 1)
+      style: primary
+      start: 0
+      end: 20
+  ? |
+    p.then()
+  : labels:
+    - source: p.then()
+      style: primary
+      start: 0
+      end: 8
+  ? |
+    p.then(onOk, onFail)
+  : labels:
+    - source: p.then(onOk, onFail)
+      style: primary
+      start: 0
+      end: 20

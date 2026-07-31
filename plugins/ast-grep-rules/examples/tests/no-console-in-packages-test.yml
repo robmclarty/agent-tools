@@ -1,0 +1,27 @@
+id: no-console-in-packages
+# `console.$METHOD` is pinned against three different methods, including one the
+# rule's author never enumerated: that is the difference between a metavariable and
+# the `any:` list of five patterns this rule started life as. `valid:` covers the
+# two sanctioned replacements plus an injected logger, which must not be mistaken
+# for the global.
+#
+# Nothing here exercises `files:`. `ast-grep test` runs these as synthetic snippets
+# with no path, so the glob is invisible to it — the note says so, and a real
+# `scan` is what checks it.
+valid:
+  - |
+    export const make = (opts: { log: (m: string) => void }) => {
+      opts.log('hi')
+    }
+  - |
+    export const to_diagnostics = () => ({ messages: ['hi'] })
+  - |
+    export const run = (logger: Logger) => logger.log('hi')
+
+invalid:
+  - |
+    export const run = () => { console.log('hello') }
+  - |
+    const fail = () => { console.error('boom') }
+  - |
+    const show = (rows: Row[]) => { console.table(rows) }

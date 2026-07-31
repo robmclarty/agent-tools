@@ -1,0 +1,23 @@
+id: no-unlinked-todo
+snapshots:
+  ? |
+    /* TODO fix the retry budget */
+  : labels:
+    - source: /* TODO fix the retry budget */
+      style: primary
+      start: 0
+      end: 31
+  ? |
+    // TODO(rob): rename this before release
+  : labels:
+    - source: '// TODO(rob): rename this before release'
+      style: primary
+      start: 0
+      end: 40
+  ? |
+    // TODO: come back to this
+  : labels:
+    - source: '// TODO: come back to this'
+      style: primary
+      start: 0
+      end: 26

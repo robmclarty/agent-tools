@@ -1,0 +1,23 @@
+id: no-promise-then
+# The `$$$HANDLERS` claim is what needs pinning: zero, one and two arguments all
+# match, and a `then` that is a declaration rather than a call does not. The last
+# valid case is the one an over-eager `regex: '\.then'` would get wrong.
+valid:
+  - |
+    const value = await load(id)
+  - |
+    const rows = await Promise.all(ids.map(load))
+  - |
+    const safe = await load(id).catch(fallback)
+  - |
+    type Thenable = { then(fn: () => void): void }
+
+invalid:
+  - |
+    p.then((v) => v + 1)
+  - |
+    p.then(onOk, onFail)
+  - |
+    p.then()
+  - |
+    const body = load(id).then((r) => r.body)

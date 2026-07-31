@@ -1,12 +1,26 @@
-// Tests for the starter-tier installer — the opt-in bundled rules (D5, D14, D22).
+// Tests for the cookbook installer — the opt-in worked examples (D5, D14, D23).
 //
 // Two things are under test here and they fail in different places. The *installer* is
 // ordinary code: given a repo, does it land the right files at the sgconfig-resolved
-// paths, and does it refuse cleanly when it should. The *tiers themselves* are data
-// this repo ships, so their invariants — every rule has a fixture and a snapshot, every
-// id matches its filename, every note documents the suppression form that actually
-// works — are asserted here too. A packaging mistake should fail `scripts/check.sh`,
-// not somebody's install.
+// paths, and does it refuse cleanly when it should.
+//
+// The *examples themselves* are data this repo ships, and D23 governs them: bundled
+// content may teach form and must never ship policy the adopter is expected to accept.
+// That is a claim about prose, which is exactly the kind of claim that rots quietly, so
+// it is asserted here rather than trusted:
+//
+//   * every example names the technique it teaches (`demonstrates:`) *and* the policy it
+//     would impose (`encodes:`), so no rule can arrive looking policy-free;
+//   * the technique each one claims is checked against the rule body, not against the
+//     prose — a `demonstrates:` line saying `inside:` fails unless the rule uses it;
+//   * the six required techniques are covered by six distinct examples, so the set stays
+//     a cookbook rather than becoming a ruleset with six entries;
+//   * the bundled prose carries no recommendation vocabulary, and nothing ships at
+//     `severity: error` — an example has not earned the right to fail anyone's build;
+//   * there is no flag that installs more than the user named.
+//
+// Together those are the mechanical half of "a reader who rejects every policy in the
+// set can still learn each technique from it."
 //
 // What this suite deliberately does not do is run `ast-grep test`. The binary is a
 // per-repo devDependency and is never on PATH (C4), so asserting green fixtures here
@@ -23,10 +37,11 @@ import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { glob_prefix, install_tiers, list_tiers, read_rule_meta } from '../install-starter.mjs';
+import { example_ids, glob_prefix, install_examples, list_examples, read_labelled, read_rule_meta } from '../install-starter.mjs';
 
 const cli = fileURLToPath(new URL('../install-starter.mjs', import.meta.url));
-const tiers_dir = fileURLToPath(new URL('../../starter-rules/', import.meta.url));
+const examples_dir = fileURLToPath(new URL('../../examples/', import.meta.url));
+const plugin_dir = fileURLToPath(new URL('../../', import.meta.url));
 
 const SGCONFIG = `ruleDirs:
   - rules
@@ -67,166 +82,193 @@ const listing = (root) => {
   return found.sort();
 };
 
+const rule_text = (id) => readFileSync(join(examples_dir, 'rules', `${id}.yml`), 'utf8');
+
 after(() => {
   for (const root of temps) rmSync(root, { recursive: true, force: true });
 });
 
-// ---------------------------------------------------------------- the tiers as data
+// ---------------------------------------------------------------- the cookbook as data
 
-test('ships exactly the two tiers D14 fixed, with the rules D14 assigned to each', () => {
-  const tiers = list_tiers();
-  assert.deepEqual(tiers.map((t) => t.name), ['functional-style', 'hygiene']);
-
-  const by_name = Object.fromEntries(tiers.map((t) => [t.name, t.rules.map((r) => r.id).sort()]));
-  assert.deepEqual(by_name.hygiene, [
+test('ships exactly the six worked examples D14 fixed, and no tier directories', () => {
+  assert.deepEqual(example_ids(), [
+    'no-async-array-callback',
     'no-console-in-packages',
-    'no-cross-package-relative-import',
-    'no-untyped-json-parse',
+    'no-enum-declaration',
+    'no-focused-or-skipped-test',
+    'no-promise-then',
+    'no-unlinked-todo',
   ]);
-  assert.deepEqual(by_name['functional-style'], [
-    'no-class-declaration',
-    'no-default-export',
-    'no-extends-inheritance',
-    'no-this-keyword',
-  ]);
+  // D14 was revised twice; the two superseded tier designs must not survive as files
+  // that `--list` no longer mentions but an adopter could still find and copy.
+  assert.ok(!existsSync(join(plugin_dir, 'starter-rules')), 'the starter-rules tiers are still on disk');
 });
 
-test('every tier carries the prose the offer is made from', () => {
-  for (const tier of list_tiers()) {
-    for (const key of ['title', 'summary', 'description', 'adopt_when', 'decline_when']) {
-      assert.equal(typeof tier[key], 'string', `${tier.name}.${key}`);
-      assert.ok(tier[key].length > 0, `${tier.name}.${key} is empty`);
+test('every example ships a fixture and a recorded snapshot', () => {
+  // `ast-grep test` is red with `No <id> baseline found` for any fixture that has
+  // `invalid:` cases and no snapshot, so an example missing one installs a red repo.
+  for (const id of example_ids()) {
+    for (const rel of [`rules/${id}.yml`, `tests/${id}-test.yml`, `tests/__snapshots__/${id}-snapshot.yml`]) {
+      assert.ok(existsSync(join(examples_dir, rel)), `missing ${rel}`);
     }
   }
 });
 
-test('every bundled rule ships a fixture and a recorded snapshot', () => {
-  // The done-when's first clause, asserted against the files rather than the report:
-  // `ast-grep test` is red with `No <id> baseline found` for any fixture that has
-  // `invalid:` cases and no snapshot, so a tier missing one installs a red repo.
-  for (const tier of list_tiers()) {
-    for (const rule of tier.rules) {
-      for (const rel of [
-        `${tier.name}/rules/${rule.id}.yml`,
-        `${tier.name}/tests/${rule.id}-test.yml`,
-        `${tier.name}/tests/__snapshots__/${rule.id}-snapshot.yml`,
-      ]) {
-        assert.ok(existsSync(join(tiers_dir, rel)), `missing ${rel}`);
-      }
+test('every example names both the technique it teaches and the policy it would impose', () => {
+  // The D23 line, at its narrowest: a bundled rule that arrived without an `encodes:`
+  // line would be policy presented as technique.
+  for (const example of list_examples()) {
+    for (const label of ['demonstrates', 'encodes']) {
+      assert.equal(typeof example[label], 'string', `${example.id}.${label}`);
+      assert.ok(example[label].length > 40, `${example.id}.${label} is too short to say anything: ${example[label]}`);
     }
+  }
+});
+
+test('each required technique is claimed by one example and actually used by its rule', () => {
+  // The coverage check, asserted against the rule *body* rather than the prose — a
+  // `demonstrates:` line is a claim, and this is what makes it a checked one. The keys
+  // come from `read_rule_meta().uses`, which reads from `rule:` down and never over
+  // the note, so an example cannot pass by explaining a construct it does not use.
+  const REQUIRED = [
+    ['no-enum-declaration', '`kind:`', ['kind:']],
+    ['no-promise-then', '`pattern:` with metavariables', ['pattern:']],
+    ['no-focused-or-skipped-test', '`constraints:`', ['constraints:', 'regex:']],
+    ['no-unlinked-todo', 'a composite rule', ['all:', 'regex:', 'not:']],
+    ['no-async-array-callback', 'relational rules', ['inside:', 'has:', 'stopBy: end']],
+    ['no-console-in-packages', '`files:`', ['files:']],
+  ];
+
+  const by_id = Object.fromEntries(list_examples().map((e) => [e.id, e]));
+  assert.deepEqual(REQUIRED.map(([id]) => id).sort(), example_ids(), 'the required techniques and the shipped examples have drifted apart');
+
+  for (const [id, claim, constructs] of REQUIRED) {
+    const example = by_id[id];
+    assert.ok(
+      example.demonstrates.startsWith(claim),
+      `${id} claims to demonstrate something else: ${example.demonstrates.slice(0, 60)}`,
+    );
+    for (const construct of constructs) {
+      assert.ok(example.uses.includes(construct), `${id} claims ${claim} but its rule body never uses ${construct} (uses: ${example.uses.join(', ')})`);
+    }
+  }
+});
+
+test('the metavariable and composite examples stay minimal enough to read', () => {
+  // Every rule body uses *some* technique, so an example only teaches the one it
+  // claims if it does not quietly drag three others along. The two that exist to
+  // isolate a single construct are pinned to it.
+  const by_id = Object.fromEntries(list_examples().map((e) => [e.id, e]));
+  assert.deepEqual(by_id['no-enum-declaration'].uses, ['kind:']);
+  assert.deepEqual(by_id['no-promise-then'].uses, ['pattern:']);
+});
+
+test('no bundled prose recommends itself, and nothing ships at error severity', () => {
+  // D23's other half. "Adapt, don't adopt" survives only while the text stays
+  // descriptive: the moment a note says `recommended`, the example is a default with
+  // extra steps. `severity: warning` is the same claim in the one field an adopter's
+  // CI actually reads.
+  const BANNED = [
+    /\brecommended\b/i,
+    /\bwe recommend\b/i,
+    /\bbest practice/i,
+    /\bsensible default/i,
+    /\bsane default/i,
+    /\bstarter (pack|tier|ruleset)/i,
+    /\bout of the box\b/i,
+  ];
+
+  for (const id of example_ids()) {
+    const text = rule_text(id);
+    for (const banned of BANNED) {
+      assert.ok(!banned.test(text), `${id} recommends itself: ${banned}`);
+    }
+    assert.equal(read_rule_meta(text).severity, 'warning', `${id} ships at a severity that fails a build`);
   }
 });
 
 test('every bundled fixture pins both halves and matches its rule id', () => {
-  for (const tier of list_tiers()) {
-    for (const rule of tier.rules) {
-      const text = readFileSync(join(tiers_dir, tier.name, 'tests', `${rule.id}-test.yml`), 'utf8');
-      assert.match(text, new RegExp(`^id: ${rule.id}$`, 'm'), `${rule.id} fixture id`);
-      // `valid:` is the half that catches an over-broad rule and the half everyone
-      // under-writes, so a bundled fixture without one is not a fixture.
-      assert.match(text, /^valid:$/m, `${rule.id} has no valid: cases`);
-      assert.match(text, /^invalid:$/m, `${rule.id} has no invalid: cases`);
-    }
+  for (const id of example_ids()) {
+    const text = readFileSync(join(examples_dir, 'tests', `${id}-test.yml`), 'utf8');
+    assert.match(text, new RegExp(`^id: ${id}$`, 'm'), `${id} fixture id`);
+    // `valid:` is the half that catches an over-broad rule and the half everyone
+    // under-writes, so a bundled fixture without one is not a fixture.
+    assert.match(text, /^valid:$/m, `${id} has no valid: cases`);
+    assert.match(text, /^invalid:$/m, `${id} has no invalid: cases`);
   }
 });
 
-test('every bundled note documents the suppression form that works, and none the broken one', () => {
-  // D22: foundry's bf33067 corrected the suppression syntax to a trailing
-  // `// ast-grep-ignore: <id>`. Three of the four source repos still document
-  // `ast-grep-ignore-next-line`, which does not work — shipping that text in a starter
-  // tier would propagate the bug by hand into every repo that adopts one.
-  for (const tier of list_tiers()) {
-    for (const rule of tier.rules) {
-      const text = readFileSync(join(tiers_dir, tier.name, 'rules', `${rule.id}.yml`), 'utf8');
-      assert.ok(
-        text.includes(`// ast-grep-ignore: ${rule.id}`),
-        `${rule.id} does not show its own trailing-comment suppression form`,
-      );
-      assert.ok(
-        !/^\s*(?:\/\/\s*)?ast-grep-ignore-next-line\b/m.test(text.replace(/`ast-grep-ignore-next-line`/g, '')),
-        `${rule.id} documents the ast-grep-ignore-next-line form, which does not work`,
-      );
-    }
+test('every bundled note shows its own suppression form', () => {
+  // The suppression syntax is knowledge the portfolio keeps losing — 130 rules across
+  // 20 repos and not one of the live ones mentions it (D22). An example that teaches a
+  // technique and leaves the reader unable to grant an exception has taught half.
+  for (const id of example_ids()) {
+    assert.ok(
+      rule_text(id).includes(`// ast-grep-ignore: ${id}`),
+      `${id} does not show its own trailing-comment suppression form`,
+    );
   }
 });
 
-test('only the rule whose claim is inherently path-scoped carries files:', () => {
-  // A `files:` glob is the quietest way a rule ends up governing nothing, so the tiers
-  // ship without one wherever the claim is repo-wide. `no-console-in-packages` is the
-  // exception on purpose: "libraries must not log" is a statement about a directory.
-  const scoped = list_tiers()
-    .flatMap((t) => t.rules)
-    .filter((r) => r.path_scoped)
-    .map((r) => r.id);
+test('only the example whose subject is scoping carries files:', () => {
+  // A `files:` glob is the quietest way a rule ends up governing nothing, so an
+  // example ships one only when the glob is the thing being taught.
+  const scoped = list_examples().filter((e) => e.path_scoped).map((e) => e.id);
   assert.deepEqual(scoped, ['no-console-in-packages']);
 });
 
 // ---------------------------------------------------------------- installing
 
-test('installs one tier at the sgconfig-resolved paths, three files per rule', () => {
+test('installs one named example at the sgconfig-resolved paths, three files', () => {
   const root = make_repo();
-  const r = install_tiers(root, ['hygiene']);
+  const r = install_examples(root, ['no-enum-declaration']);
 
   assert.equal(r.mode, 'installed');
-  assert.deepEqual(r.tiers, ['hygiene']);
-  assert.deepEqual(r.rules.map((x) => x.id).sort(), [
-    'no-console-in-packages',
-    'no-cross-package-relative-import',
-    'no-untyped-json-parse',
-  ]);
+  assert.deepEqual(r.examples.map((x) => x.id), ['no-enum-declaration']);
   assert.deepEqual(r.written.sort(), [
-    'rules/no-console-in-packages.yml',
-    'rules/no-cross-package-relative-import.yml',
-    'rules/no-untyped-json-parse.yml',
-    'tests/__snapshots__/no-console-in-packages-snapshot.yml',
-    'tests/__snapshots__/no-cross-package-relative-import-snapshot.yml',
-    'tests/__snapshots__/no-untyped-json-parse-snapshot.yml',
-    'tests/no-console-in-packages-test.yml',
-    'tests/no-cross-package-relative-import-test.yml',
-    'tests/no-untyped-json-parse-test.yml',
+    'rules/no-enum-declaration.yml',
+    'tests/__snapshots__/no-enum-declaration-snapshot.yml',
+    'tests/no-enum-declaration-test.yml',
   ]);
   assert.deepEqual(r.skipped, []);
   for (const rel of r.written) assert.ok(existsSync(join(root, rel)), `not on disk: ${rel}`);
 });
 
-test('installing one tier leaves the other tier entirely unwritten', () => {
-  // "Each tier installs independently" — the point of two tiers is that adopting the
-  // defensible one does not drag a house style in with it.
+test('installing one example leaves the other five entirely unwritten', () => {
+  // "Installs only an example the user names" — the whole difference between a
+  // cookbook and a tier is that nothing rides along.
   const root = make_repo();
-  install_tiers(root, ['hygiene']);
+  install_examples(root, ['no-enum-declaration']);
 
-  for (const id of ['no-class-declaration', 'no-this-keyword', 'no-extends-inheritance', 'no-default-export']) {
-    assert.ok(!existsSync(join(root, `rules/${id}.yml`)), `functional-style leaked: ${id}`);
+  for (const id of example_ids().filter((x) => x !== 'no-enum-declaration')) {
+    assert.ok(!existsSync(join(root, `rules/${id}.yml`)), `${id} rode along uninvited`);
   }
+  assert.deepEqual(readdirSync(join(root, 'rules')), ['no-enum-declaration.yml']);
 });
 
-test('installs both tiers in one run without duplicating a rule', () => {
+test('installs two named examples in one run without duplicating either', () => {
   const root = make_repo();
-  const r = install_tiers(root, ['hygiene', 'functional-style', 'hygiene']);
+  const r = install_examples(root, ['no-promise-then', 'no-unlinked-todo', 'no-promise-then']);
 
   assert.equal(r.mode, 'installed');
-  assert.deepEqual(r.tiers, ['hygiene', 'functional-style']);
-  assert.equal(r.rules.length, 7);
-  assert.equal(r.written.length, 21);
-  assert.equal(new Set(r.written).size, 21);
+  assert.deepEqual(r.examples.map((x) => x.id), ['no-promise-then', 'no-unlinked-todo']);
+  assert.equal(r.written.length, 6);
+  assert.equal(new Set(r.written).size, 6);
 });
 
-test('the installed bytes are the bundled bytes', () => {
+test('the installed bytes are the bundled bytes, labels and all', () => {
+  // The `encodes:` line has to survive the copy: a rule that arrives in the adopter's
+  // repo stripped of the line naming its policy is the payload D23 refuses.
   const root = make_repo();
-  install_tiers(root, ['functional-style']);
+  install_examples(root, ['no-async-array-callback']);
 
-  for (const id of ['no-class-declaration', 'no-this-keyword', 'no-extends-inheritance', 'no-default-export']) {
-    assert.equal(
-      readFileSync(join(root, `rules/${id}.yml`), 'utf8'),
-      readFileSync(join(tiers_dir, 'functional-style', 'rules', `${id}.yml`), 'utf8'),
-      `${id} rule differs from the bundled copy`,
-    );
-    assert.equal(
-      readFileSync(join(root, `tests/__snapshots__/${id}-snapshot.yml`), 'utf8'),
-      readFileSync(join(tiers_dir, 'functional-style', 'tests', '__snapshots__', `${id}-snapshot.yml`), 'utf8'),
-      `${id} snapshot differs from the bundled copy`,
-    );
-  }
+  const installed = readFileSync(join(root, 'rules/no-async-array-callback.yml'), 'utf8');
+  assert.equal(installed, rule_text('no-async-array-callback'));
+  assert.ok(installed.includes('**encodes:**'));
+  assert.equal(
+    readFileSync(join(root, 'tests/__snapshots__/no-async-array-callback-snapshot.yml'), 'utf8'),
+    readFileSync(join(examples_dir, 'tests', '__snapshots__', 'no-async-array-callback-snapshot.yml'), 'utf8'),
+  );
 });
 
 test('honors a repo whose sgconfig puts rules and tests somewhere else', () => {
@@ -240,20 +282,33 @@ testConfigs:
 `,
     dirs: ['tools/ast-grep/rules', 'tools/ast-grep/tests'],
   });
-  const r = install_tiers(root, ['hygiene']);
+  const r = install_examples(root, ['no-promise-then']);
 
   assert.equal(r.mode, 'installed');
-  assert.ok(r.written.includes('tools/ast-grep/rules/no-untyped-json-parse.yml'));
-  assert.ok(r.written.includes('tools/ast-grep/tests/no-untyped-json-parse-test.yml'));
-  assert.ok(r.written.includes('tools/ast-grep/tests/snaps/no-untyped-json-parse-snapshot.yml'));
+  assert.deepEqual(r.written.sort(), [
+    'tools/ast-grep/rules/no-promise-then.yml',
+    'tools/ast-grep/tests/no-promise-then-test.yml',
+    'tools/ast-grep/tests/snaps/no-promise-then-snapshot.yml',
+  ]);
   assert.ok(r.created_dirs.includes('tools/ast-grep/tests/snaps'));
 });
 
 // ---------------------------------------------------------------- reporting
 
-test('reports a path-scoped rule whose directory this repo does not have', () => {
+test('the report leads with adapting the policy, not with running the rule', () => {
+  // *Adapt, don't adopt.* An install that opened with "run scan" would be handing over
+  // a rule to enforce; the first thing it hands over is the decision.
   const root = make_repo();
-  const r = install_tiers(root, ['hygiene']);
+  const r = install_examples(root, ['no-promise-then']);
+
+  assert.match(r.next[0], /\*\*encodes:\*\*/);
+  assert.match(r.next[0], /decide whether you agree/);
+  assert.equal(r.examples[0].encodes, list_examples().find((e) => e.id === 'no-promise-then').encodes);
+});
+
+test('reports a path-scoped example whose directory this repo does not have', () => {
+  const root = make_repo();
+  const r = install_examples(root, ['no-console-in-packages']);
 
   const scoped = r.path_scoped.find((s) => s.id === 'no-console-in-packages');
   assert.deepEqual(scoped.files, ['packages/**/*.ts']);
@@ -264,18 +319,17 @@ test('reports a path-scoped rule whose directory this repo does not have', () =>
   );
 });
 
-test('stays quiet about a path-scoped rule whose directory exists', () => {
+test('stays quiet about a path-scoped example whose directory exists', () => {
   const root = make_repo({ dirs: ['rules', 'tests', 'packages'] });
-  const r = install_tiers(root, ['hygiene']);
+  const r = install_examples(root, ['no-console-in-packages']);
 
-  const scoped = r.path_scoped.find((s) => s.id === 'no-console-in-packages');
-  assert.deepEqual(scoped.missing_prefixes, []);
+  assert.deepEqual(r.path_scoped[0].missing_prefixes, []);
   assert.ok(!r.next.some((n) => n.includes('governs nothing')));
 });
 
 test('points the next steps at the repo\'s own ast-grep command, never a bare binary', () => {
   const root = make_repo({ config: '{"ast_grep_command": "npx --no-install ast-grep"}' });
-  const r = install_tiers(root, ['functional-style']);
+  const r = install_examples(root, ['no-enum-declaration']);
 
   assert.equal(r.ast_grep_command, 'npx --no-install ast-grep');
   assert.ok(r.next.some((n) => n.includes('npx --no-install ast-grep test')));
@@ -284,77 +338,92 @@ test('points the next steps at the repo\'s own ast-grep command, never a bare bi
 
 // ---------------------------------------------------------------- refusals
 
-test('declining writes nothing: no tier named is a listing, not an install', () => {
+test('declining writes nothing: no example named is a listing, not an install', () => {
   const root = make_repo();
   const before = listing(root);
 
   const out = JSON.parse(execFileSync('node', [cli, '--root', root], { encoding: 'utf8' }));
-  assert.equal(out.mode, 'tiers');
-  assert.equal(out.tiers.length, 2);
+  assert.equal(out.mode, 'examples');
+  assert.equal(out.examples.length, 6);
   assert.deepEqual(listing(root), before);
 });
 
-test('declining both tiers leaves zero rule files written', () => {
-  // The done-when's last clause, from the outside: the CLI with no `--tier`, and the
-  // CLI with `--list`, both leave the repo byte-identical.
+test('the catalogue is fully legible without installing anything', () => {
+  // D23 in the shape a reader meets it: both labels and the construct list come back
+  // from the no-write path, so learning the six techniques never costs a rule file.
   const root = make_repo();
   const before = listing(root);
 
-  execFileSync('node', [cli, '--list', '--root', root], { encoding: 'utf8' });
+  const out = JSON.parse(execFileSync('node', [cli, '--list', '--root', root], { encoding: 'utf8' }));
+  for (const example of out.examples) {
+    assert.ok(example.demonstrates && example.encodes && example.uses.length > 0, example.id);
+  }
   assert.deepEqual(listing(root), before);
   assert.deepEqual(readdirSync(join(root, 'rules')), []);
   assert.deepEqual(readdirSync(join(root, 'tests')), []);
 });
 
-test('refuses the whole tier when one of its rules is already enforced', () => {
+test('there is no flag that installs more than the user named', () => {
+  // The cookbook has no `--all` on purpose, and "no default" is only true while that
+  // stays true. Anything that looks like a bulk install is a usage error, not a
+  // convenience.
+  const root = make_repo();
+  for (const args of [['--all'], ['--tier', 'hygiene'], ['--example', 'all']]) {
+    const out = JSON.parse(execFileSync('node', [cli, ...args, '--root', root], { encoding: 'utf8' }));
+    assert.equal(out.mode, 'error', args.join(' '));
+    assert.equal(out.error_type, 'usage', args.join(' '));
+  }
+  assert.deepEqual(readdirSync(join(root, 'rules')), []);
+});
+
+test('refuses the whole set when one named example is already enforced', () => {
   const root = make_repo({
-    files: { 'rules/house/no-untyped-json-parse.yml': 'id: no-untyped-json-parse\nlanguage: TypeScript\nrule:\n  pattern: JSON.parse($A)\n' },
+    files: { 'rules/house/no-promise-then.yml': 'id: no-promise-then\nlanguage: TypeScript\nrule:\n  pattern: $P.then($$$H)\n' },
   });
-  const r = install_tiers(root, ['hygiene']);
+  const r = install_examples(root, ['no-promise-then', 'no-enum-declaration']);
 
   assert.equal(r.mode, 'error');
   assert.equal(r.error_type, 'exists');
-  assert.match(r.message, /no-untyped-json-parse — already at rules\/house\/no-untyped-json-parse\.yml/);
+  assert.match(r.message, /no-promise-then — already at rules\/house\/no-promise-then\.yml/);
   assert.match(r.message, /--skip-existing/);
-  // Atomic: the two rules that *could* have landed did not.
-  assert.ok(!existsSync(join(root, 'rules/no-console-in-packages.yml')));
-  assert.ok(!existsSync(join(root, 'rules/no-cross-package-relative-import.yml')));
+  // Atomic: the example that *could* have landed did not.
+  assert.ok(!existsSync(join(root, 'rules/no-enum-declaration.yml')));
 });
 
-test('--skip-existing installs the rest of the tier around the local rule', () => {
+test('--skip-existing installs the rest around the local rule', () => {
   const root = make_repo({
-    files: { 'rules/no-untyped-json-parse.yml': 'id: no-untyped-json-parse\nlanguage: TypeScript\nrule:\n  pattern: JSON.parse($A)\n' },
+    files: { 'rules/no-promise-then.yml': 'id: no-promise-then\nlanguage: TypeScript\nrule:\n  pattern: $P.then($$$H)\n' },
   });
-  const local = readFileSync(join(root, 'rules/no-untyped-json-parse.yml'), 'utf8');
-  const r = install_tiers(root, ['hygiene'], { skip_existing: true });
+  const local = readFileSync(join(root, 'rules/no-promise-then.yml'), 'utf8');
+  const r = install_examples(root, ['no-promise-then', 'no-enum-declaration'], { skip_existing: true });
 
   assert.equal(r.mode, 'installed');
-  assert.deepEqual(r.rules.map((x) => x.id).sort(), ['no-console-in-packages', 'no-cross-package-relative-import']);
-  assert.deepEqual(r.skipped, [{ id: 'no-untyped-json-parse', tier: 'hygiene', reason: 'already present', at: 'rules/no-untyped-json-parse.yml' }]);
+  assert.deepEqual(r.examples.map((x) => x.id), ['no-enum-declaration']);
+  assert.deepEqual(r.skipped, [{ id: 'no-promise-then', reason: 'already present', at: 'rules/no-promise-then.yml' }]);
   // The local rule is the tuned one — it survives untouched.
-  assert.equal(readFileSync(join(root, 'rules/no-untyped-json-parse.yml'), 'utf8'), local);
-  assert.ok(r.next.some((n) => n.includes('no-untyped-json-parse')));
+  assert.equal(readFileSync(join(root, 'rules/no-promise-then.yml'), 'utf8'), local);
+  assert.ok(r.next.some((n) => n.includes('no-promise-then')));
 });
 
 test('refuses a re-install rather than overwriting what it wrote last time', () => {
   const root = make_repo();
-  assert.equal(install_tiers(root, ['hygiene']).mode, 'installed');
+  assert.equal(install_examples(root, ['no-unlinked-todo']).mode, 'installed');
 
-  const again = install_tiers(root, ['hygiene']);
+  const again = install_examples(root, ['no-unlinked-todo']);
   assert.equal(again.mode, 'error');
   assert.equal(again.error_type, 'exists');
 
-  const skipped = install_tiers(root, ['hygiene'], { skip_existing: true });
+  const skipped = install_examples(root, ['no-unlinked-todo'], { skip_existing: true });
   assert.equal(skipped.mode, 'error');
   assert.equal(skipped.error_type, 'exists');
   assert.match(skipped.message, /nothing left to install/);
 });
 
 test('refuses when sgconfig declares no testConfigs, before writing any rule', () => {
-  // D3 has nowhere to land, and a tier that dropped its fixtures on the way in would
-  // install rules that can never be verified.
+  // D3 has nowhere to land, and an example that dropped its fixture on the way in
+  // would install a rule that can never be verified.
   const root = make_repo({ sgconfig: 'ruleDirs:\n  - rules\n', dirs: ['rules'] });
-  const r = install_tiers(root, ['functional-style']);
+  const r = install_examples(root, ['no-enum-declaration']);
 
   assert.equal(r.mode, 'error');
   assert.equal(r.error_type, 'no-tests-dir');
@@ -362,21 +431,21 @@ test('refuses when sgconfig declares no testConfigs, before writing any rule', (
   assert.deepEqual(readdirSync(join(root, 'rules')), []);
 });
 
-test('refuses an unknown tier by name, listing the ones that exist', () => {
+test('refuses an unknown example by name, listing the ones that exist', () => {
   const root = make_repo();
-  const r = install_tiers(root, ['security']);
+  const r = install_examples(root, ['no-class-declaration']);
 
   assert.equal(r.mode, 'error');
   assert.equal(r.error_type, 'usage');
-  assert.match(r.message, /unknown tier: security/);
-  assert.match(r.message, /functional-style and hygiene/);
+  assert.match(r.message, /unknown example: no-class-declaration/);
+  assert.match(r.message, /no-enum-declaration/);
   assert.deepEqual(readdirSync(join(root, 'rules')), []);
 });
 
 test('passes a resolver error straight through', () => {
   const root = mkdtempSync(join(tmpdir(), 'ast-grep-rules-'));
   temps.push(root);
-  const r = install_tiers(root, ['hygiene']);
+  const r = install_examples(root, ['no-enum-declaration']);
 
   assert.equal(r.mode, 'error');
   assert.equal(r.error_type, 'config');
@@ -386,16 +455,16 @@ test('passes a resolver error straight through', () => {
 
 test('the CLI emits one JSON object and exits 0, including on a refusal', () => {
   const root = make_repo();
-  const out = JSON.parse(execFileSync('node', [cli, '--tier', 'hygiene', '--root', root], { encoding: 'utf8' }));
+  const out = JSON.parse(execFileSync('node', [cli, '--example', 'no-promise-then', '--root', root], { encoding: 'utf8' }));
   assert.equal(out.mode, 'installed');
 
-  const again = JSON.parse(execFileSync('node', [cli, '--tier', 'hygiene', '--root', root], { encoding: 'utf8' }));
+  const again = JSON.parse(execFileSync('node', [cli, '--example', 'no-promise-then', '--root', root], { encoding: 'utf8' }));
   assert.equal(again.mode, 'error');
   assert.equal(again.error_type, 'exists');
 });
 
 test('the CLI rejects a malformed invocation instead of guessing', () => {
-  for (const args of [['--tier'], ['--tier', 'hygiene', '--list'], ['--root'], ['--wat']]) {
+  for (const args of [['--example'], ['--example', 'no-promise-then', '--list'], ['--root'], ['--wat']]) {
     const out = JSON.parse(execFileSync('node', [cli, ...args], { encoding: 'utf8' }));
     assert.equal(out.mode, 'error', args.join(' '));
     assert.equal(out.error_type, 'usage', args.join(' '));
@@ -404,19 +473,45 @@ test('the CLI rejects a malformed invocation instead of guessing', () => {
 
 // ---------------------------------------------------------------- helpers
 
-test('read_rule_meta reads id, severity and files, and stops at the next key', () => {
+test('read_labelled unwraps a whole paragraph, not just its first line', () => {
+  // The bug this pins: with the `m` flag, `$` matches every line end, and each label
+  // came back clipped to its first wrapped line.
+  const note = `note: |
+  **demonstrates:** \`kind:\` — matching a node by its
+  tree-sitter type name, with no pattern at all.
+
+  **encodes:** a preference, stated once.
+
+  Body prose that belongs to neither.
+`;
+
+  assert.equal(
+    read_labelled(note, 'demonstrates'),
+    '`kind:` — matching a node by its tree-sitter type name, with no pattern at all.',
+  );
+  assert.equal(read_labelled(note, 'encodes'), 'a preference, stated once.');
+  assert.equal(read_labelled(note, 'nonesuch'), null);
+});
+
+test('read_rule_meta reads the keys, the labels, and the constructs below rule:', () => {
   const meta = read_rule_meta(`id: no-console-in-packages
 language: TypeScript
-severity: error
+severity: warning
 message: "Libraries must not log: use a logger."
 note: |
-  A block scalar whose body is indented.
-  files:
-    - "this line is prose, not a key"
+  **demonstrates:** \`files:\` — scoping a rule.
+
+  **encodes:** a preference about libraries.
+
+  A note that mentions \`inside:\` and \`stopBy: end\` in prose, plus:
+    any:
+      - this line is prose, not a key
 
 rule:
-  any:
+  all:
     - pattern: console.log($$$A)
+    - not:
+        regex: 'allowed'
 
 files:
   - "packages/**/*.ts"
@@ -427,14 +522,21 @@ ignores:
 `);
 
   assert.equal(meta.id, 'no-console-in-packages');
-  assert.equal(meta.severity, 'error');
+  assert.equal(meta.severity, 'warning');
   assert.deepEqual(meta.files, ['packages/**/*.ts', 'apps/**/*.ts']);
+  assert.equal(meta.demonstrates, '`files:` — scoping a rule.');
+  assert.equal(meta.encodes, 'a preference about libraries.');
+  // The note talks about `inside:`, `stopBy: end` and `any:`; the rule uses none of
+  // them, and the construct list is read from `rule:` down for exactly that reason.
+  assert.deepEqual(meta.uses, ['pattern:', 'all:', 'not:', 'regex:', 'files:']);
 });
 
 test('read_rule_meta returns no files for a rule that declares none', () => {
-  const meta = read_rule_meta('id: no-class-declaration\nseverity: error\nrule:\n  kind: class_declaration\n\nignores:\n  - "**/dist/**"\n');
+  const meta = read_rule_meta('id: no-enum-declaration\nseverity: warning\nrule:\n  kind: enum_declaration\n\nignores:\n  - "**/dist/**"\n');
   assert.deepEqual(meta.files, []);
-  assert.equal(meta.severity, 'error');
+  assert.equal(meta.severity, 'warning');
+  assert.deepEqual(meta.uses, ['kind:']);
+  assert.equal(meta.demonstrates, null);
 });
 
 test('glob_prefix finds the directory a glob is anchored to, or nothing', () => {

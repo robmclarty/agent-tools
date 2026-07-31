@@ -1,0 +1,59 @@
+id: no-console-in-packages
+language: TypeScript
+severity: warning
+message: "Libraries should not own someone else's stdout. Accept a sink or return diagnostics as data: `(opts: { log: (m: string) => void }) => opts.log('…')`."
+note: |
+  **demonstrates:** `files:` — scoping a rule to part of the tree. `files:` is a
+  *top-level* key, a sibling of `rule:`, never something inside it: it decides which
+  files ast-grep opens at all, before any matching happens. `ignores:` is its
+  counterpart and subtracts from whatever `files:` let through.
+
+  **encodes:** a preference for libraries that hand information back instead of
+  printing it. Applications are meant to log, which is the whole reason this rule is
+  scoped rather than global — and a repo that ships a CLI as a package will want the
+  line drawn somewhere else.
+
+  **This is the one example whose globs you must edit before it does anything.**
+  `packages/**/*.ts` is a guess about your layout. If your libraries live under
+  `libs/` or `src/lib/`, this rule loads, matches nothing, reports nothing, and
+  looks enforced — the quietest failure in rule authoring, because a rule that
+  governs nothing and a rule that finds nothing wrong produce identical output.
+  There is no portable default here; that is why `/ast-grep-rules:rule` scaffolds
+  new rules with `files:` commented out rather than guessed.
+
+  Scoping is what lets one claim be true in one directory and false in the next,
+  and it is worth reaching for before you weaken a rule. "No logging" is wrong as a
+  repo-wide rule and right as a rule about `packages/`; the fix is the glob, not a
+  longer list of exceptions.
+
+  Two mechanics:
+
+    * Globs are matched against the path **relative to the directory ast-grep runs
+      in**, so `packages/**/*.ts` and `**/packages/**/*.ts` are different claims in
+      a nested checkout.
+    * `files:` narrows what is scanned. It does not affect `ast-grep test`, which
+      runs your fixtures as synthetic snippets with no path at all — so a fixture
+      cannot tell you the glob is wrong. Check that with a real `scan` on a file you
+      know should be flagged.
+
+  Legitimate exception, on the offending line:
+
+      console.log(banner) // ast-grep-ignore: no-console-in-packages
+
+  A trailing `// ast-grep-ignore: <id>` suppresses that line; the same comment
+  standing on the line above suppresses the line below it. Naming the id is what
+  keeps the exception narrow — a bare `// ast-grep-ignore` switches off every rule
+  there, including ones written later. Path-wide exceptions go in `ignores` below.
+
+rule:
+  pattern: console.$METHOD($$$ARGS)
+
+files:
+  - "packages/**/*.ts"
+
+ignores:
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/*.d.ts"
+  - "**/dist/**"
+  - "**/node_modules/**"

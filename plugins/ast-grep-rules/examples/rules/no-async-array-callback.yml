@@ -1,0 +1,67 @@
+id: no-async-array-callback
+language: TypeScript
+severity: warning
+message: "`forEach`/`filter`/`find`/`some`/`every` discard the promise an async callback returns, so the work is unsequenced and its rejections go unhandled. Use `for (const x of xs) { await … }`, or `await Promise.all(xs.map(async …))`."
+note: |
+  **demonstrates:** relational rules. `inside:` looks *up* the tree from the matched
+  node, `has:` looks *down*, and `stopBy: end` tells either one to keep walking
+  instead of checking only the immediate neighbour. Both appear here, nested, which
+  is how they usually turn up once a rule has to be precise.
+
+  **encodes:** a preference for concurrency that is written down rather than
+  implied. A codebase that uses `forEach(async …)` deliberately as fire-and-forget,
+  and handles rejection some other way, is making a different call.
+
+  `stopBy: end` is load-bearing, not decoration. A callback passed as an argument is
+  not a child of the call — an `arguments` node sits in between:
+
+      call_expression
+        member_expression        ← `items.forEach`, which the `has:` below finds
+        arguments
+          arrow_function         ← the node this rule matches
+
+  On the default (`stopBy: neighbor`) the `inside:` check looks only at `arguments`,
+  finds no `call_expression`, and the rule matches nothing at all — silently, with a
+  green test run and an empty scan. That is the single most common way a relational
+  rule ends up doing nothing.
+
+  `stopBy` takes a third form: `stopBy: {kind: statement_block}` walks up until it
+  hits that kind and gives up there, which is how you keep an `inside:` from
+  escaping the scope it was meant to stay in.
+
+  `kind: arrow_function` is deliberately the narrow choice, and it has a gap:
+  `items.forEach(async function (x) { … })` is a `function_expression` and slips
+  straight through. Closing it is an `any:` away — see `no-unlinked-todo` for the
+  composite forms — and the fixture pins the gap where it currently is, so widening
+  the rule shows up as a diff rather than as a surprise.
+
+  **Which direction you pick is a UX decision, not a correctness one**, because
+  whichever node you match is the node the error underlines. Written from the call
+  with `has:`, this rule would highlight the entire `items.forEach(…)` expression;
+  written from the callback with `inside:`, it highlights the callback. The narrower
+  span is usually the kinder one — that is why the match is anchored on the arrow.
+
+  Legitimate exception, on the offending line:
+
+      items.forEach(async (x) => void log(x)) // ast-grep-ignore: no-async-array-callback
+
+  A trailing `// ast-grep-ignore: <id>` suppresses that line; the same comment
+  standing on the line above suppresses the line below it. Naming the id is what
+  keeps the exception narrow — a bare `// ast-grep-ignore` switches off every rule
+  there, including ones written later. Path-wide exceptions go in `ignores` below.
+
+rule:
+  all:
+    - kind: arrow_function
+    - regex: '^async\b'
+    - inside:
+        kind: call_expression
+        stopBy: end
+        has:
+          field: function
+          regex: '\.(forEach|filter|find|some|every)$'
+
+ignores:
+  - "**/*.d.ts"
+  - "**/dist/**"
+  - "**/node_modules/**"

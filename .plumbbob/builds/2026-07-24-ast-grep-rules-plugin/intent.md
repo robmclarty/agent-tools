@@ -31,16 +31,81 @@
   and the hook capture friction; `/mine` classifies it and routes what ast-grep cannot
   express. `scripts/check.sh` is green, the marketplace validates, and both loops have
   been driven end to end in a throwaway repo built from nothing.
-- **Explicitly NOT doing:** Replacing oxlint. A curated rule library beyond the two
-  explicitly opt-in starter tiers. Auto-enforcing any rule without human review. Any
-  language but TypeScript. Migrating the four source repos off their bespoke skills
-  (a fleet task, not this build).
+- **Explicitly NOT doing:** Replacing oxlint. **Shipping a curated rule library, or any
+  bundled rule an adopter is expected to adopt** — what ships is a cookbook of worked
+  examples teaching what ast-grep can express (D23, D14). Auto-enforcing any rule without
+  human review. Any language but TypeScript. Migrating the source repos off their bespoke
+  skills (a fleet task, not this build).
 
 ## Field evidence
 
-*(Gathered 2026-07-24 against the four live repos, then re-checked under `/pb-refine`.
-This is what revised the spec — it answers all four of the spec's open questions
-empirically, and one finding reversed the plan's central mechanism.)*
+*(Gathered 2026-07-24 against four repos, then re-checked under `/pb-refine`. This is
+what revised the spec — it answers all four of the spec's open questions empirically,
+and one finding reversed the plan's central mechanism. **Re-based 2026-07-30** against
+the whole portfolio; read §Portfolio re-survey first, because it supersedes every claim
+below about which rules to bundle.)*
+
+### Portfolio re-survey (2026-07-30)
+
+**The four-repo survey was the wrong corpus for rule sourcing, and it is now known why.**
+20 repos on this machine carry an `sgconfig.yml`, holding **130 rules** between them.
+The plan looked at four of them — gantry, foundry, trailhead, ridgeline-mk2 — and those
+four are the *oldest* in the active set: all last touched 2026-04-18/19, all dormant.
+foundry in particular is a precursor to **fascicle**, which is under daily development.
+Thirteen repos have been updated since May 2026 and none of them was read.
+
+**Six of the seven bundled rules appear in zero live repos.** Against the thirteen
+repos updated since May, the shipped tier membership scores:
+
+| Bundled rule | Live repos carrying it |
+|---|---|
+| `no-default-export` | **12 / 13** |
+| `no-untyped-json-parse` | 0 |
+| `no-cross-package-relative-import` | 0 |
+| `no-console-in-packages` | 0 |
+| `no-class-declaration` | 0 |
+| `no-this-keyword` | 0 |
+| `no-extends-inheritance` | 0 |
+
+**What the live cohort actually enforces**, by how many of the thirteen carry it:
+`no-class` 12, `no-default-export` 12, `require-js-extension` 7,
+`no-deep-sibling-import` 7, `no-logic-in-barrel` 5, `no-this` **2**. Sixty-four distinct
+rule ids in all — the long tail is per-repo architecture, as the spec's non-goals predict.
+
+**The real byte-identical starter pack is `no-class`, and it is one rule, not three.**
+`no-class` is byte-identical in **8 of the 12** repos that carry it — a far stronger
+consensus than anything in the April corpus, where the plan settled for three matching
+files out of seven. And it is one rule doing the work the April cohort split across
+`no-class-declaration` + `no-this-keyword` + `no-extends-inheritance`: the live
+formulation is `any: [class_declaration, abstract_class_declaration]` with the message
+*"Prefer functional/procedural style over classes. Use modules and closures instead."*
+`no-this` survives in exactly two repos (volley, paceline). The preference is
+functional-over-OOP; policing `this` was a April-cohort elaboration that did not spread.
+
+**`checkride` is the distilled starter pack, empirically.** Updated 2026-07-30, it holds
+exactly five rules — `no-class`, `no-default-export`, `require-js-extension`,
+`no-deep-sibling-import`, `no-logic-in-barrel` — and they are exactly the five most
+common rules across the whole live cohort. A fresh repo's whole ruleset *is* the answer
+to "what should a starter tier contain." Hence D14 (revised).
+
+**The fixture discipline was dropped, not adopted.** `testConfigs` appears in **6 of 6**
+of the April-cohort sgconfigs and in **0 of 13** since. This is direct counter-evidence
+to D3, and it is recorded rather than smoothed over — see D3 for why the decision stands
+anyway.
+
+**The rule idiom changed.** Live rules use `language: typescript` (lowercase), carry **no
+`note:` block at all** — the `message:` is a block scalar holding the whole explanation
+plus a pointer to a real docs file — and scope with `files: src/**/*.ts` rather than a
+long `ignores` list. They run 8–20 lines where foundry's run 40. **None of the live rules
+documents a suppression form anywhere**, which is what leaves foundry's `bf33067` still
+the only place in the corpus that gets the syntax right (D22).
+
+### The 2026-07-24 four-repo survey
+
+*(Still the right corpus for the **lesson loop** — those four are the only repos that
+ever carried the bespoke `post-friction-lesson` / `mine-ast-grep-rules` /
+`propose-ast-grep-rule` skills, so the stall evidence below stands unchanged. Its claims
+about **which rules to bundle** are superseded by the re-survey above.)*
 
 **The loop stalled (spec OQ1, answered).** Lesson entries: gantry 3, foundry 4,
 trailhead 1, ridgeline-mk2 7 — **15 total, all within 2026-04-18/19**, none since. The
@@ -166,12 +231,21 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
   *because* ast-grep already owns that mapping and duplicating a varying path invites skew.
 - D3 (fixture-required): a rule is not done until `<tests_dir>/<id>-test.yml` exists with
   `valid:`/`invalid:` cases and `ast-grep test` passes — *because* it is the only
-  verification that survives the conversation.
+  verification that survives the conversation. **Held 2026-07-30 against direct
+  counter-evidence:** `testConfigs` is in 6 of 6 April-cohort sgconfigs and 0 of 13
+  since, so live practice has abandoned this entirely. That is read as a discipline
+  needing a tool to carry it rather than a discipline that was wrong — which is this
+  plugin's whole thesis, and the one thing it can supply that a hand-rolled rules dir
+  cannot. The honest risk is stated rather than hidden: if the tool ships and fixtures
+  still do not get written, D3 was aspiration, not a finding.
 - D4 (scaffold-capability-flag): rule scaffolding prefers the repo's configured
   `scaffold_command`, else the plugin writes the YAML itself — *because* gantry's
   improvement generalizes as a capability flag, not a fork.
-- D5 (opt-in-starter-pack): bundled rules are always explicitly opt-in, never default —
-  *because* defaulting them on would make this the rule library the spec's non-goals refuse.
+- D5 (opt-in-bundled-content): nothing bundled is ever written without an explicit
+  request naming it, and there is no default — *because* defaulting anything on would
+  make this the rule library the spec's non-goals refuse. **Still binding after the
+  2026-07-30 reframe**, and now the weaker of two guards: D23 means the bundled content
+  carries no policy to opt into in the first place.
 - D6 (mining-is-inventory): `scan.mjs` does inventory and classification, not similarity
   clustering — *because* the template parses and the checkbox already carries the signal,
   while clustering across a 7-entry corpus is noise.
@@ -195,14 +269,51 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
   plugin-delivered skills, which is how this plugin ships (D11) — *because* carrying
   frontmatter that implies gating which never happens is worse than omitting it. Discovery
   rests on `description:` (D16) and the hook trigger (D8).
-- D13 (generalize-the-better-variant): where the four repos disagree, generalize from the
-  better variant — gantry's 97-line `propose`, ridgeline's broadened `lesson` triggers —
-  *because* the majority version is only a majority by copy-paste.
-- D14 (starter-tiers): the starter pack ships as two separately-offered tiers, neither
-  default — `hygiene` (`no-untyped-json-parse`, `no-cross-package-relative-import`,
-  `no-console-in-packages`) and `functional-style` (`no-class-declaration`,
-  `no-this-keyword`, `no-extends-inheritance`, `no-default-export`) — *because* the seven
-  shared rules are two different kinds of claim and only one is defensible to a stranger.
+- D13 (generalize-the-better-variant): where repos disagree, generalize from the better
+  variant — gantry's 97-line `propose`, ridgeline's broadened `lesson` triggers —
+  *because* the majority version is only a majority by copy-paste. **Amended
+  2026-07-30:** "better" means *more recent*, not *better argued*, whenever the two
+  conflict. The four-repo majority was four copies of one April snapshot; the live
+  cohort is thirteen repos that kept editing. For skill text the four remain the only
+  source (they are the only repos that carried the skills); for rule text the live
+  cohort wins outright.
+- D14 (cookbook-not-tier): **revised twice on 2026-07-30; this is the standing version.**
+  What ships is a **cookbook of worked examples**, not a ruleset. Roughly six rules, each
+  chosen to demonstrate a distinct *ast-grep capability* rather than a policy: `kind:`
+  matching, `pattern:` with metavariables, `constraints:` + regex, a composite
+  `all:`/`regex:`/`not:`, a relational `inside:`/`has:` with `stopBy: end`, and `files:`
+  scoping. Each ships a passing fixture, states **what it demonstrates**, and names **the
+  preference it encodes** so it cannot be mistaken for a default — *because* what blocks
+  an adopter is not the absence of a ruleset, it is not knowing what ast-grep can
+  express (D23).
+
+  Framed *adapt, don't adopt*: `/rule` and `/audit` cite the examples when authoring, and
+  the install offer becomes "want one of these as a starting point?" rather than "adopt
+  this tier."
+
+  Two superseded versions, kept because the reasoning is the record:
+  - *v1:* two tiers, `hygiene` and `functional-style`, from seven rules shared across the
+    four April repos. Six of those seven appear in **zero** live repos — sound reasoning
+    on a dead corpus.
+  - *v2:* one tier, `essentials`, holding checkride's five. Better evidence, same category
+    error: it still shipped one person's taste as everyone's floor.
+  - The `this` finding survives both and constrains the examples. The April cohort split
+    the functional/procedural claim across `no-class-declaration`, `no-this-keyword` and
+    `no-extends-inheritance`; the live cohort states it once as `no-class`,
+    byte-identical in 8 of 12, with `no-this` in 2 of 13. So where an example needs a
+    ban-a-construct shape it uses the single-rule form — as an *illustration of `kind:`
+    matching*, labelled as a style choice the reader need not share.
+
+- D23 (general-purpose-not-personal): **the governing constraint on everything bundled,
+  added 2026-07-30.** This plugin is for anyone's workflow, not its author's. Bundled
+  content may teach *form* — how to express a structural claim, how to fixture it, how to
+  suppress it — and must never ship *policy* the adopter is expected to accept. The live
+  corpus is inspiration and evidence, never a payload: read to learn what a well-formed
+  rule looks like, not copied so adopters inherit someone's taste in classes and default
+  exports. *Because* the value the spec claims is that rules are mined from **this**
+  project's friction and **this** project's stated conventions — shipping a preference
+  set contradicts the product's own argument. Test for any bundled file: a reader who
+  disagrees with its policy should still get value from it.
 - D15 (hook-precision): the hook matches `Edit|Write` on source paths and its gate asks
   one narrow question — did the user just correct the assistant, or did the assistant just
   undo its own recent change — offering, never writing, tuned against a real session in
@@ -230,10 +341,21 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
 - D21 (one-scan-core): `scripts/scan.mjs` owns the rules-dir inventory and serves both
   `--conventions` and `--lessons` modes — *because* both mechanisms need the same "what is
   already enforced" answer.
-- D22 (ship-corrected-variants): where the shared rules drift, the starter tiers ship
-  foundry's variants — *because* foundry's `bf33067` fixed the suppression syntax to
-  trailing `// ast-grep-ignore: <rule-id>`, and the `ast-grep-ignore-next-line` form the
-  other repos document does not work.
+- D22 (ship-corrected-variants): **re-based 2026-07-30.** The tier ships the **live
+  cohort's** variants, taking `checkride`'s text as the reference where a rule drifts —
+  *because* `no-class` is byte-identical in 8 of 12 live repos and checkride is the most
+  recently edited copy, where foundry is a dormant precursor to fascicle whose text
+  nothing has carried forward.
+
+  The suppression finding survives the re-base and is now the tier's own contribution
+  rather than a copied variant: foundry's `bf33067` is still the **only** place in the
+  whole 130-rule corpus that documents the working trailing `// ast-grep-ignore:
+  <rule-id>` form. None of the live rules mentions suppression at all. So the bundled
+  rules add that line themselves — it is knowledge the portfolio has and keeps losing,
+  which is exactly what a bundled rule is for.
+
+  Two idiom shifts come with the re-base: `language: typescript` lowercase, and the
+  explanation living in a block-scalar `message:` rather than a separate `note:`.
 
 ## Constraints
 
@@ -248,9 +370,12 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
   command (D9).
 - C5 (repo-docs-parity): a new plugin needs a per-plugin README, a root README table row,
   and a marketplace entry — the convention set by commit `759980c`.
-- C6 (four-repos-read-only): gantry, foundry, trailhead and ridgeline-mk2 are read-only
-  source material. This build never writes to them, and nothing in it depends on another
-  repo being present to run.
+- C6 (source-repos-read-only): every other repo on this machine is read-only source
+  material. This build never writes to any of them, and nothing in it depends on another
+  repo being present to run. **Widened 2026-07-30** from the original four (gantry,
+  foundry, trailhead, ridgeline-mk2) — the rule evidence now comes from the whole
+  20-repo, 130-rule corpus, with `checkride`, `fascicle` and `plumbbob` as the live
+  references and the original four kept only as the lesson-loop corpus.
 - C7 (hermetic-tests): every check runs from fixtures inside this repo or a scratch repo
   the harness builds — *because* a test that reads a sibling project passes on this
   machine and nowhere else, and CI has no siblings at all.
@@ -304,15 +429,20 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
     - seam: `plugins/ast-grep-rules/skills/mine/SKILL.md`
     - model: sonnet — the deterministic work already happened in step 4
 
-12. [ ] feat: add the opt-in starter rulesets — **done when:** each tier installs independently, every bundled rule ships a fixture, `ast-grep test` passes on both tiers in a harness repo, and declining both leaves zero rule files written
+12. [x] feat: add the opt-in starter rulesets — **done when:** each tier installs independently, every bundled rule ships a fixture, `ast-grep test` passes on both tiers in a harness repo, and declining both leaves zero rule files written
     - seam: `plugins/ast-grep-rules/starter-rules/hygiene/`, `plugins/ast-grep-rules/starter-rules/functional-style/`, `plugins/ast-grep-rules/skills/init/SKILL.md`
     - model: sonnet — mechanical; the tiers are fixed by D14 and the variants by D22
+    - note: landed against the **superseded** D14/D22, on the 2026-07-30 re-survey. The installer, its suite and the `/init` offer are sound and survive untouched; the seven rules it bundled came from a dead corpus and are replaced by step 13.
 
-13. [ ] docs: add the plugin README and root marketplace table row — **done when:** `bash scripts/check.sh` is green, the per-plugin README documents both mechanisms and both tiers, and the root README table carries its row
+13. [ ] feat: replace the starter tiers with a technique cookbook — **done when:** `examples/` holds ~6 worked rules covering `kind:`, `pattern:`+metavariables, `constraints:`+regex, composite `all:`/`regex:`/`not:`, relational `inside:`/`has:` with `stopBy: end`, and `files:` scoping; each carries a fixture and recorded snapshot, a **demonstrates:** line and an **encodes:** line naming the preference it embodies; `ast-grep test` passes on the set in a harness repo; both tier directories are gone; the offer in `/init` reads *adapt, don't adopt* and installs only an example the user names; and a reader who rejects every policy in the set can still learn each technique from it (D23)
+    - seam: `plugins/ast-grep-rules/examples/`, `plugins/ast-grep-rules/scripts/install-starter.mjs`, `plugins/ast-grep-rules/scripts/__tests__/install-starter.test.mjs`, `plugins/ast-grep-rules/skills/init/SKILL.md`
+    - model: opus — the technique coverage is the design work, and D23 has to be enforced by something a test can check rather than by good intentions; the regex-composite and relational examples are also where a `valid:` case is most likely to be wrong
+
+14. [ ] docs: add the plugin README and root marketplace table row — **done when:** `bash scripts/check.sh` is green, the per-plugin README documents both mechanisms and the starter tier, and the root README table carries its row
     - seam: `plugins/ast-grep-rules/README.md`, `README.md`
     - model: sonnet — patterned on `plugins/version/README.md`
 
-14. [ ] chore: verify both loops end to end in a throwaway repo — **done when:** in a harness repo, `/audit` → `/rule` promotes one stated convention to a rule with a passing fixture, **and** hook → `/lesson` → `/mine` → `/rule` promotes one induced friction event; both transcripts land in the build log and the scratch dir is removed
+15. [ ] chore: verify both loops end to end in a throwaway repo — **done when:** in a harness repo, `/audit` → `/rule` promotes one stated convention to a rule with a passing fixture, **and** hook → `/lesson` → `/mine` → `/rule` promotes one induced friction event; both transcripts land in the build log and the scratch dir is removed
     - seam: `.plumbbob/builds/2026-07-24-ast-grep-rules-plugin/build-log.md`
     - model: opus — the whole finding is that this stalls in practice; a from-scratch repo is also the truest test, since it is what a new user has (C7)
 
@@ -320,7 +450,7 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
 
 *(All eight resolved 2026-07-24 — the substance moved into Decisions; see §Verdicts.)*
 
-- Q1 (starter-pack-tiers): one set or named tiers? — *resolved:* 2026-07-24, two tiers → D14
+- Q1 (starter-pack-tiers): one set or named tiers? — *resolved:* 2026-07-24, two tiers → D14; **reopened and re-resolved 2026-07-30:** neither — a technique cookbook, no bundled policy at all (D14 v3, D23)
 - Q2 (hook-trigger-precision): what does the hook watch for? — *resolved:* 2026-07-24, narrow two-signature gate → D15
 - Q3 (command-surface): what are the skills called? — *resolved:* 2026-07-24, short names → D16
 - Q4 (conventions-audit-is-the-real-mechanism): audit or mine as headline? — *resolved:* 2026-07-24, audit leads → D17
@@ -360,6 +490,36 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
 - 2026-07-24 — repairs applied: the shared-rule count corrected from 8 byte-identical to
   7 files with 3 matching; the drift recorded as *corrective*, with foundry's
   `// ast-grep-ignore: <rule-id>` suppression fix now binding on the starter tiers (D22).
+- 2026-07-30 — **rule corpus: four repos vs. the whole portfolio → the portfolio** (D14,
+  D22, D13, C6 revised; §Portfolio re-survey added). The four surveyed repos turned out
+  to be the four *oldest* in the active set — all dormant since 2026-04-18/19, with
+  foundry a precursor to fascicle. Twenty repos carry ast-grep and 130 rules; thirteen
+  have been edited since May and none was read. Six of the seven rules step 12 bundled
+  appear in **zero** live repos. Prompted by Rob, who flagged foundry as stale.
+- 2026-07-30 — **tier shape: two tiers vs. checkride's five → checkride's five** (D14).
+  `checkride`, updated the same day, carries exactly five rules and they are exactly the
+  five most common across the live cohort — a fresh repo's whole ruleset is already the
+  starter pack, so the tier needs no taxonomy invented for it. Cost: the
+  defensible-to-a-stranger / house-style split that justified two tiers is dropped.
+- 2026-07-30 — **`this`: policed vs. not → not** (D14). Live data and stated preference
+  agree: `no-class` is in 12 of 13 repos and byte-identical in 8 of 12, while `no-this`
+  is in 2 of 13. The April cohort's three-rule split of the functional/procedural claim
+  is one rule now. The preference is functional-over-OOP, not a rule about a keyword.
+- 2026-07-30 — **bundled content: a ruleset vs. a cookbook → cookbook** (D14 v3, D23 and
+  the Frame's non-goals). Rob: *"I don't want this plugin to simply copy what is in these
+  repos, only be inspired by them... not everyone wants no-class, that's just my own
+  personal preference. This plugin needs to be general-purpose and flexible."* Both
+  earlier tier designs failed the same test in different ways — v1 shipped a dead corpus's
+  taste, v2 shipped a live corpus's taste, and taste was never the thing to ship. What an
+  adopter is actually missing is knowledge of what ast-grep can express, so the bundle
+  teaches capability and labels every policy it touches as optional. Checked while
+  deciding: the rest of the plugin is already preference-neutral — `/audit` reads the
+  adopter's own docs, `/rule` scaffolds from a blank red template, every path comes from
+  the adopter's `sgconfig.yml` — so the fix is contained to one directory.
+- 2026-07-30 — **D3 under counter-evidence: hold vs. soften → hold.** `testConfigs` is
+  in 6 of 6 April sgconfigs and 0 of 13 since — the fixture discipline was abandoned, not
+  spread. Held anyway, on the reading that it is a discipline needing a tool to carry it,
+  which is the plugin's thesis. Recorded in D3 as a stated risk rather than smoothed away.
 
 ## Source
 

@@ -1,0 +1,22 @@
+id: no-unlinked-todo
+# The third valid case is the one `regex:` alone would get wrong: `kind: comment`
+# is what keeps the word out of string literals and identifiers. The fourth invalid
+# case is the reason the `not:` regex demands digits — a parenthesised something is
+# not a linked issue.
+valid:
+  - |
+    // TODO(#412): swap for the pooled client
+  - |
+    /* TODO(#7): drop once the migration lands */
+  - |
+    const banner = 'TODO: rendered to the user'
+  - |
+    const todoCount = items.length
+
+invalid:
+  - |
+    // TODO: come back to this
+  - |
+    /* TODO fix the retry budget */
+  - |
+    // TODO(rob): rename this before release

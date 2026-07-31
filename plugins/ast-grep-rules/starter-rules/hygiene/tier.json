@@ -1,8 +1,0 @@
-{
-  "name": "hygiene",
-  "title": "Hygiene",
-  "summary": "Three rules that are defensible to a stranger: no `any` leaking in from JSON.parse, no reaching across a package boundary with `../../../`, no logging from a library.",
-  "description": "These are not a house style. Each one names a specific way a TypeScript codebase leaks — an `any` that switches off checking downstream, an import that breaks a package's public entry, a library that writes to someone else's stdout — and each has a replacement you can paste. A reviewer who has never seen your project can still tell you why the flagged line is wrong.",
-  "adopt_when": "You want structural lint that earns its keep on day one, in a repo whose conventions are not written down yet.",
-  "decline_when": "You have deliberately chosen the opposite in at least one case — a repo that logs from its libraries on purpose should not carry a rule that says otherwise."
-}

@@ -1,0 +1,63 @@
+id: no-unlinked-todo
+language: TypeScript
+severity: warning
+message: "A TODO with nothing behind it is a note to nobody. Write `TODO(#123):` so the tracker owns the follow-up, or do the work now."
+note: |
+  **demonstrates:** a composite rule. `all:` requires every sub-rule to match the
+  *same node*, `regex:` matches that node's raw text, and `not:` carves the
+  sanctioned form back out. Together they spell "this, but not that" — the shape
+  most real rules settle into once they meet a codebase.
+
+  **encodes:** a preference for TODOs a tracker can find. A team that uses bare
+  TODOs as scratch marks, and grooms them some other way, loses nothing by deleting
+  this rule.
+
+  Why reaching for text is right *here*: a comment is a leaf. There is no structure
+  inside `// TODO: fix this` for a pattern to grip, so `regex:` is the only handle
+  the node offers. When it is wrong is just as sharp — matching `class ` by regex
+  instead of `kind: class_declaration` finds the word in every string and doc
+  comment you have.
+
+  The three composites, and what each one means:
+
+    * `all:` — every sub-rule matches this node. Intersection.
+    * `any:` — at least one does. Union, and the usual way to cover several
+      spellings of one construct (`class_declaration` *or*
+      `abstract_class_declaration`).
+    * `not:` — the sub-rule must not match. This is how exceptions get expressed:
+      state the broad claim, then subtract the case you have decided is fine.
+
+  They nest, and a `not:` wrapping a whole `any:` is often clearer than several
+  `not:`s in a row.
+
+  Order inside `all:` does not change what matches, but it changes what the next
+  reader learns first. Put the narrowing sub-rule at the top — `kind: comment` here
+  — so they know *what* is being matched before they read *how* it is filtered.
+
+  Suppression has a twist that only bites rules matching comments, and it is worth
+  the paragraph. A trailing `// ast-grep-ignore: <id>` normally suppresses its own
+  line — but ast-grep reads a comment that *starts* a line as a directive for the
+  line below. So this does not work:
+
+      // TODO: revisit after the migration // ast-grep-ignore: no-unlinked-todo
+
+  It is one comment node, the ignore is inside the very text being matched, the TODO
+  stays flagged, and `unused-suppression` fires on the same line. Two nodes on the
+  line is what fixes it:
+
+      /* TODO: revisit after the migration */ // ast-grep-ignore: no-unlinked-todo
+
+  Naming the id keeps the exception narrow — a bare `// ast-grep-ignore` switches
+  off every rule there. Path-wide exceptions go in `ignores` below.
+
+rule:
+  all:
+    - kind: comment
+    - regex: 'TODO'
+    - not:
+        regex: 'TODO\(#\d+\)'
+
+ignores:
+  - "**/*.d.ts"
+  - "**/dist/**"
+  - "**/node_modules/**"

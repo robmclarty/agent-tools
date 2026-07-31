@@ -1,0 +1,24 @@
+id: no-enum-declaration
+# `enum_declaration` is claimed in the note to cover every spelling of the construct,
+# so every spelling is pinned here. That claim is the reason this rule works as a
+# single `kind:` — if a future grammar splits `declare enum` out the way it splits
+# `abstract class` from `class`, this fixture is what says so.
+valid:
+  - |
+    export const Mode = { on: 'on', off: 'off' } as const
+  - |
+    export type Mode = (typeof Mode)[keyof typeof Mode]
+  - |
+    interface Color { red: number }
+  - |
+    const enumerate = (xs: string[]) => xs.entries()
+
+invalid:
+  - |
+    enum Color { Red, Green }
+  - |
+    const enum Size { S, M }
+  - |
+    export enum Mode { On, Off }
+  - |
+    declare enum External { A }

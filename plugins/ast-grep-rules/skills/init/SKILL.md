@@ -1,6 +1,6 @@
 ---
 name: init
-description: Configure a repo for the ast-grep-rules plugin — detect its ast-grep layout, generate .claude/ast-grep.json, bootstrap a minimal sgconfig.yml when the repo has none, and offer the two opt-in starter rule tiers. Run this once per repo before /audit, /rule, /lesson or /mine; a second run reports the resolved config instead of overwriting it, and can still adopt a tier.
+description: Configure a repo for the ast-grep-rules plugin — detect its ast-grep layout, generate .claude/ast-grep.json, bootstrap a minimal sgconfig.yml when the repo has none, and walk the cookbook of worked example rules. Run this once per repo before /audit, /rule, /lesson or /mine; a second run reports the resolved config instead of overwriting it, and can still install an example.
 allowed-tools: Read, Write, Glob, Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs*), Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs*)
 ---
 
@@ -22,15 +22,16 @@ the repos that need it least, and would break greenfield entirely.
 
 Configuration leaves a repo with zero rules, which is the honest starting point — the
 rules worth having come from `/ast-grep-rules:audit` reading the conventions this
-project actually states. Two small bundled tiers exist for the repo that wants somewhere
-to start, and this skill offers them at the end. They are opt-in every time.
+project actually states. What ships alongside is a **cookbook**, not a ruleset: six
+worked examples, each teaching one thing ast-grep can express. This skill walks that
+catalogue at the end. Reading it is the point; installing from it is optional.
 
 `$ARGUMENTS` — none. Anything passed is a free-text hint about the repo's layout.
 
 ## Preflight context
 
 - Resolver result: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs`
-- Starter tiers: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs --list`
+- Example cookbook: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs --list`
 
 The resolver runs *first*. Its JSON already tells you which branch you are in — read it
 before Globbing anything:
@@ -50,7 +51,7 @@ before Globbing anything:
   `.claude/ast-grep.json`. The one exception is a `.gitkeep` in a rules or tests
   directory this skill just created. Rule files are never hand-written here — the only
   thing that puts one in the repo is `install-starter.mjs`, run with an explicit
-  `--tier` the user just named.
+  `--example` the user just named.
 - **Never edit the repo's `package.json`**, and never install anything. If
   `@ast-grep/cli` is missing, that is a line in the report, not an action.
 - **`.claude/ast-grep.json` is written whole**, in the key order below, as strict JSON —
@@ -231,10 +232,10 @@ is safe to re-run, and a second run is a status report, not a re-configuration.
    "refresh" it, and do not overwrite a value the user chose deliberately just because
    detection would now infer a different one.
 
-4. **Make the starter-tier offer** — see **Starter tiers** below. A repo that declined
-   both tiers at configure time is exactly the repo that might want one now, so the
-   offer belongs on the re-run too. It stays an offer: this branch still writes nothing
-   unless the user names a tier.
+4. **Walk the cookbook** — see **The example cookbook** below. A repo that took nothing
+   from it at configure time is exactly the repo that might want an example now, so it
+   belongs on the re-run too. This branch still writes nothing unless the user names
+   one.
 
 ## Steps — error
 
@@ -263,64 +264,78 @@ Both writing branches end here.
    - `/ast-grep-rules:audit` as the natural next move — it reports which conventions
      their docs already state that no rule enforces, which is where most rules come from.
 
-4. **Make the starter-tier offer** — see **Starter tiers** below.
+4. **Walk the cookbook** — see **The example cookbook** below.
 
-## Starter tiers
+## The example cookbook
 
-Two small bundled rulesets ship with the plugin. Both writing branches and the
-already-configured branch end with the same offer, and it is **an offer every time**:
-nothing here has a default, and declining is a complete answer that leaves the repo with
-zero rule files.
+Six worked rules ship with the plugin. They are **not a starter ruleset**, and the
+difference is the whole point: what blocks someone adopting structural lint is rarely
+the absence of rules, it is not knowing what ast-grep can express. So each example was
+chosen to demonstrate one capability — `kind:`, `pattern:` with metavariables,
+`constraints:` + regex, a composite `all:`/`regex:`/`not:`, a relational
+`inside:`/`has:` with `stopBy: end`, and `files:` scoping.
 
-The plugin's whole claim is that the rules worth having are mined from *this* project's
-friction and *this* project's stated conventions — not curated from someone else's. A
-tier that installed itself would quietly turn this into the rule library that claim
-refuses. So the tiers exist for one narrow reason: a repo starting from zero has nothing
-for `/ast-grep-rules:audit` to compare against, and a few rules you can read and argue
-with beat an empty directory.
+Every one of them also enforces some policy, because a rule enforcing nothing would
+teach nothing. So every one says which policy that is, out loud, on an **encodes:** line
+sitting right beside the **demonstrates:** line. **Adapt, don't adopt** is the whole
+posture: a reader who disagrees with all six policies should still walk away with all
+six techniques.
 
-1. **Present both tiers from the preflight `--list` JSON**, in its own words — each
-   tier's `title`, `summary`, its `rules` by id, and its `adopt_when` / `decline_when`.
-   Do not paraphrase the two into one recommendation; they are different kinds of claim,
-   which is why they are two tiers:
+Both writing branches and the already-configured branch end here. Reading the catalogue
+is the deliverable. Installing from it is optional, has no default, and never happens
+without the user naming an example.
 
-   - **hygiene** describes defects. Each rule names a way a TypeScript codebase leaks,
-     and a stranger can be told why the flagged line is wrong.
-   - **functional-style** describes a house style. These rules are right only where the
-     project has actually made that call. Say so plainly — a repo that uses classes
-     should decline, and declining costs it nothing.
+1. **Present the catalogue from the preflight `--list` JSON**, in your own words: for
+   each example, its `id`, what it **demonstrates**, what it **encodes**, and the `uses`
+   list showing which rule constructs its body actually contains. Keep the two lines
+   distinct — the technique is the offer, the policy is the caveat. Do not collapse the
+   six into a recommendation, do not rank them, and do not describe any subset as a
+   sensible place to start.
 
-   State the third option out loud alongside them: **neither**, and let `/audit` propose
-   rules from what this repo's own docs already say. For a repo with real conventions
-   written down, that is the better path, and this skill should say which one it thinks
-   fits based on what Detection found in `convention_docs`.
+   State plainly what the normal path is: **install nothing**, and let
+   `/ast-grep-rules:audit` propose rules from what this repo's own docs already say. For
+   a repo with conventions written down — say so if Detection found real
+   `convention_docs` — that is strictly the better route, because those rules will be
+   this project's rather than someone else's.
+
+   An example is worth installing in one situation: the user wants a working rule of
+   that *shape* in front of them to edit into their own. Say that, and say that editing
+   it is expected rather than optional.
 
 2. **Install only what the user names**, one command per invocation:
 
    ```
-   node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs --tier <name> [--tier <name>]
+   node ${CLAUDE_PLUGIN_ROOT}/scripts/install-starter.mjs --example <id> [--example <id>]
    ```
 
-   Never run it without `--tier`; never pass a tier the user did not name. The script
-   copies three files per rule — the rule, its `*-test.yml` fixture and its recorded
-   snapshot — to the paths sgconfig.yml declares, and it is atomic: if any rule in the
-   tier collides with one this repo already has, it writes nothing and says which.
+   Never run it without `--example`; never pass an id the user did not name; there is
+   deliberately no flag that installs everything. The script copies three files per
+   example — the rule, its `*-test.yml` fixture and its recorded snapshot — to the paths
+   sgconfig.yml declares, and it is atomic: if a named example collides with a rule this
+   repo already has, it writes nothing and says which.
 
 3. **On `error_type: "exists"`, relay the message and stop.** The local rule is the tuned
-   one and it wins by default. `--skip-existing` installs the rest of the tier around it
-   — offer that, do not assume it. Never resolve a collision by overwriting.
+   one and it wins by default. `--skip-existing` installs the rest around it — offer
+   that, do not assume it. Never resolve a collision by overwriting.
 
 4. **Report what landed**, from the JSON: the rule ids, the file count, and then
 
+   - The `next` list verbatim. It opens with the **encodes:** line and the instruction to
+     decide whether you agree with it, which is the step that turns an example into this
+     repo's rule. Do not reorder it into "run the tests first".
    - Every `path_scoped` entry with a non-empty `missing_prefixes` — that rule's `files:`
      globs point at a directory this repo does not have, so it currently governs nothing
      while looking enforced. Offer to edit the glob. This is the one thing in the install
      that is genuinely wrong until someone fixes it.
-   - The `next` list verbatim. It starts with `<ast_grep_command> test`, which should be
-     green immediately — every bundled rule ships with its snapshot, so a fresh install
-     needs no `--update-all`.
-   - That `<ast_grep_command> scan` will now flag existing code, and on a mature repo it
-     usually finds plenty. Adopting a tier is a decision to fix or suppress those.
+   - That `<ast_grep_command> test` should be green immediately — every example ships
+     with its snapshot, so a fresh install needs no `--update-all` — and that
+     `<ast_grep_command> scan` will now flag existing code. On a mature repo it usually
+     finds plenty, and deciding what to do about that is the real adoption question.
+
+5. **Offer to help edit it.** An example left exactly as it shipped is the bundled policy
+   this design refuses, just delivered by hand. The obvious first edits are the
+   `severity:` (everything ships as `warning`), the `message:`, and — for
+   `no-console-in-packages` — the `files:` glob.
 
 ## When to use this skill
 
@@ -331,8 +346,8 @@ with beat an empty directory.
   "sgconfig not found".
 - Checking what the current configuration resolves to — the already-configured branch is
   a read-only status report.
-- Adopting a starter tier in a repo that is already configured — the offer is on the
-  re-run for exactly that reason.
+- Reading the example cookbook, or installing one of its rules, in a repo that is
+  already configured — the catalogue is on the re-run for exactly that reason.
 
 ## When NOT to use this skill
 
@@ -340,8 +355,8 @@ with beat an empty directory.
   (`/ast-grep-rules:audit`) — configuration is a one-time move.
 - Changing a rules directory. That lives in `sgconfig.yml`; edit it there and every
   skill in this plugin follows, with no config change at all.
-- Writing a rule of this project's own. The starter tiers are a floor, not the
-  mechanism; `/ast-grep-rules:audit` is what finds the rules this repo actually needs.
+- Writing a rule of this project's own. The cookbook teaches form, not policy;
+  `/ast-grep-rules:audit` is what finds the rules this repo actually needs.
 
 ## Edge cases
 
@@ -359,12 +374,16 @@ with beat an empty directory.
   the plugin will run.
 - **The user declines the write.** Nothing has been written. Say what would have been
   written and stop; re-running `/ast-grep-rules:init` picks up from the same place.
-- **The user declines both starter tiers.** The expected answer for a repo whose
-  conventions are already written down, and the right one for a repo that has not
-  decided yet. Zero rule files are written. Point at `/ast-grep-rules:audit` and move on
-  — do not re-offer, and do not soften a tier into a "just this one rule" install.
-- **A tier installs but `<ast_grep_command> test` is red.** Not a rule to debug: every
-  bundled rule ships its snapshot and is green on arrival. Look for a `snapshotDir` in
+- **The user installs nothing from the cookbook.** This is the ordinary outcome, not a
+  declined offer — the catalogue was the deliverable and they have read it. Zero rule
+  files are written. Point at `/ast-grep-rules:audit` and move on; do not re-offer, and
+  do not talk anyone into "just one to get started."
+- **The user asks which examples they should install.** Answer honestly: none of them,
+  on the strength of the policy. Ask instead which *technique* they are missing, and
+  point at the example that teaches it — or go straight to `/ast-grep-rules:audit`,
+  which proposes rules this repo has already argued for in its own docs.
+- **An example installs but `<ast_grep_command> test` is red.** Not a rule to debug:
+  every example ships its snapshot and is green on arrival. Look for a `snapshotDir` in
   sgconfig.yml that changed after the install, or a pre-existing rule elsewhere in the
   repo that was already red. Report what you find rather than running `--update-all`,
   which would bake the current behavior in as correct.

@@ -1,0 +1,23 @@
+id: no-async-array-callback
+# `.map` is the load-bearing valid case: it is the sanctioned way to do this, so a
+# rule that flagged it would be telling people to stop doing the right thing. The
+# `function` form in the last valid case is a documented gap, not an accident — see
+# the note on the rule; widening it is an `any:` away, and the fixture records where
+# the line currently sits so that widening it shows up as a diff here.
+valid:
+  - |
+    const rows = await Promise.all(items.map(async (x) => load(x)))
+  - |
+    items.forEach((x) => log(x))
+  - |
+    for (const x of items) { await load(x) }
+  - |
+    items.forEach(async function (x) { await load(x) })
+
+invalid:
+  - |
+    items.forEach(async (x) => { await load(x) })
+  - |
+    const live = rows.filter(async (r) => check(r))
+  - |
+    const hit = list.find(async (x) => probe(x))

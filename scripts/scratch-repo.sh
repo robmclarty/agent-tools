@@ -18,7 +18,7 @@
 #   sgconfig.yml            the minimal real shape: one rule dir, one test config
 #   .claude/ast-grep.json   the plugin's own config, written out in full rather than
 #                           left to defaults, so the harness reads as documentation
-#   src/*.ts                two files carrying the shapes the starter tiers flag, so
+#   src/*.ts                two files carrying enough ordinary TypeScript smells that
 #                           `/audit` and `/rule` have something real to work on
 #   docs/lessons.md         the entry template and nothing else — a fresh friction log
 #
@@ -222,10 +222,10 @@ skips fenced blocks, so the template never registers as a candidate of its own.
 ```
 LESSONS
 
-# Two sources carrying, between them, six of the seven shapes the starter tiers flag —
-# untyped JSON.parse, console in a package, default export, class, extends, and `this`.
-# (`no-cross-package-relative-import` needs a monorepo and has no shape here.) They are
-# ordinary enough to read as real code, which is what makes `/audit` a fair test.
+# Two sources carrying, between them, the shapes a first rule usually gets written
+# about — an untyped JSON.parse, a console call, a default export, a class, `extends`
+# and `this`. They are ordinary enough to read as real code, which is what makes
+# `/audit` a fair test.
 cat > src/parse-config.ts <<'PARSECONFIG'
 import { readFileSync } from 'node:fs';
 

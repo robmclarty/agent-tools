@@ -1,0 +1,30 @@
+id: no-focused-or-skipped-test
+snapshots:
+  ? |
+    describe.only('the parser', () => {})
+  : labels:
+    - source: describe.only('the parser', () => {})
+      style: primary
+      start: 0
+      end: 37
+  ? |
+    it.only('adds a row', run)
+  : labels:
+    - source: it.only('adds a row', run)
+      style: primary
+      start: 0
+      end: 26
+  ? |
+    it.skip('adds a row', run)
+  : labels:
+    - source: it.skip('adds a row', run)
+      style: primary
+      start: 0
+      end: 26
+  ? |
+    test.skip('parses', run)
+  : labels:
+    - source: test.skip('parses', run)
+      style: primary
+      start: 0
+      end: 24

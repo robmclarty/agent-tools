@@ -1,0 +1,49 @@
+id: no-promise-then
+language: TypeScript
+severity: warning
+message: "Prefer `await` to a `.then()` chain: `const value = await load(id)` reads in the order it runs and shares one try/catch with the code around it."
+note: |
+  **demonstrates:** `pattern:` with metavariables. A pattern is written as code, so
+  the matcher looks like the thing it matches. `$NAME` stands for exactly one node;
+  `$$$NAME` stands for zero or more, and is what argument lists, statement bodies
+  and parameter lists need.
+
+  **encodes:** a preference for `await` over promise chains. It is a readability
+  claim, not a correctness one — code that composes pipelines, or that has to stay
+  synchronous at the call site, reads better as a chain. Disagree freely; the
+  pattern mechanics below are the part worth taking.
+
+  Three things to know before writing your own:
+
+    * **`$X` is one node, `$$$X` is any number.** `$PROMISE.then($$$HANDLERS)`
+      matches `p.then(ok)`, `p.then(ok, fail)` and `p.then()` alike. Writing
+      `$PROMISE.then($HANDLER)` would match only the one-argument form — a common
+      way to ship a rule that catches half of what you meant.
+    * **Reusing a name demands identical code.** `$A === $A` matches `x === x` but
+      not `x === y`, which is how you find self-comparisons. When you want a
+      throwaway wildcard that is *not* pinned to earlier uses, name it `$_` or
+      `$$$_`.
+    * **A pattern must parse on its own.** ast-grep builds it with the same grammar
+      it uses on your files, so a fragment that is not valid TypeScript standing
+      alone either fails to load or matches something surprising. `import $$$S from
+      $SOURCE` is the classic trap: a bare metavariable is not a legal module
+      specifier, so the parser recovers into a shape you did not ask for. When a
+      rule mysteriously matches nothing, run it through `--debug-query=pattern` and
+      read the tree it actually built.
+
+  Legitimate exception, on the offending line:
+
+      queue.then(drain) // ast-grep-ignore: no-promise-then
+
+  A trailing `// ast-grep-ignore: <id>` suppresses that line; the same comment
+  standing on the line above suppresses the line below it. Naming the id is what
+  keeps the exception narrow — a bare `// ast-grep-ignore` switches off every rule
+  there, including ones written later. Path-wide exceptions go in `ignores` below.
+
+rule:
+  pattern: $PROMISE.then($$$HANDLERS)
+
+ignores:
+  - "**/*.d.ts"
+  - "**/dist/**"
+  - "**/node_modules/**"

@@ -1,0 +1,24 @@
+id: no-focused-or-skipped-test
+# Both constraints get their own valid case, because a fixture that only exercises
+# the happy path cannot tell you which of the two regexes has stopped working:
+# `router.only(...)` fails the `FN` constraint, `it.each(...)` fails `MODIFIER`.
+# The invalid list crosses the two axes rather than listing all six combinations.
+valid:
+  - |
+    it('adds a row', run)
+  - |
+    describe('the parser', () => {})
+  - |
+    router.only('/health')
+  - |
+    it.each([1, 2])('handles %i', run)
+
+invalid:
+  - |
+    it.only('adds a row', run)
+  - |
+    it.skip('adds a row', run)
+  - |
+    test.skip('parses', run)
+  - |
+    describe.only('the parser', () => {})

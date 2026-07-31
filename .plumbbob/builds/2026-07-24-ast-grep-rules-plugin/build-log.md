@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 12 — feat: add the opt-in starter rulesets
+**Current step:** 13 — feat: replace the starter tiers with a technique cookbook
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -34,9 +34,10 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 9. feat: add /lesson to record a friction entry
 - ☑ 10. feat: add a PostToolUse hook as the friction trigger
 - ☑ 11. feat: add /mine to classify and route lesson candidates
-- ☐ 12. feat: add the opt-in starter rulesets
-- ☐ 13. docs: add the plugin README and root marketplace table row
-- ☐ 14. chore: verify both loops end to end in a throwaway repo
+- ☑ 12. feat: add the opt-in starter rulesets
+- ☐ 13. feat: replace the starter tiers with a technique cookbook
+- ☐ 14. docs: add the plugin README and root marketplace table row
+- ☐ 15. chore: verify both loops end to end in a throwaway repo
 
 ## Park list
 
@@ -52,6 +53,9 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - [ ] scan.mjs --lessons states `entries` but not the item count, so /mine has to derive the total by summing `buckets`; a `candidates: <n>` field would remove the hand-count that made a live-fire run miscount and then invent a scan bug to explain it
 - [ ] the four source repos still carry the buggy no-this-keyword: its note claims a `this: void` parameter is exempt but the rule flags it — a fleet fix, out of this build's scope
 - [ ] D22 picked foundry's rule variants from a 4-repo survey that missed fascicle (foundry's successor, committed daily, 23 rules) — the conclusion survives but the stated rationale is stale; /plumbbob:refine when convenient
+- [ ] D22's suppression claim does not hold on ast-grep 0.45.0: '// ast-grep-ignore-next-line: <id>' behaves identically to '// ast-grep-ignore: <id>' (both scoped to the named id, both suppress the following line) — foundry's bf33067 rationale is version-specific at best; the cookbook notes document the trailing form without repeating the 'the other one is broken' claim
+- [ ] a rule matching comment nodes cannot be suppressed by an ignore embedded in the comment it matches — ast-grep reads a comment starting its own line as a directive for the NEXT line, so '// TODO: x // ast-grep-ignore: id' leaves the TODO flagged and the suppression unused; worth a line in the step-14 README's authoring section
+- [ ] D14 also says /rule and /audit should cite the examples when authoring; step 13's seam covered only /init, so both skills still scaffold and propose without pointing at the cookbook — a one-section addition to each
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -318,3 +322,4 @@ folder, so it rides the branch into the PR.)*
     **empty** after every run. Ticking a checkbox stays `/rule`'s job, after its fixture is green.
   - Scratch repo removed after the last run.
 - 2026-07-31 — step 11 checkpointed · a6e0f041a — feat: add /mine to classify and route lesson candidates (1968m)
+- 2026-07-31 — step 12 checkpointed · 7375716e6 — feat: add the opt-in starter rulesets (1 drift, 26m)

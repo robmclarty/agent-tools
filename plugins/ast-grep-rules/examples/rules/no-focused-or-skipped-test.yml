@@ -1,0 +1,57 @@
+id: no-focused-or-skipped-test
+language: TypeScript
+severity: warning
+message: "`.only` hides the rest of the suite and `.skip` hides a failure, and both pass CI. Drop the modifier, or delete the test and link the issue that would bring it back."
+note: |
+  **demonstrates:** `constraints:` — the pattern captures a metavariable, then a
+  sub-rule narrows what that metavariable is allowed to be. Here `regex:` does the
+  narrowing, which is the common case: the AST cannot tell `it` from `router`, but
+  the text can.
+
+  **encodes:** a preference for treating a committed `.only` or `.skip` as a defect
+  rather than a checkpoint. Teams that land `.skip` deliberately, with an issue
+  linked beside it, are making a different and defensible call.
+
+  What the constraint buys: on its own, `$FN.$MODIFIER($$$ARGS)` matches every
+  method call in the codebase. Two short regexes turn a useless pattern into a
+  precise one — and they do it without the six near-identical patterns an `any:`
+  list would need (`it.only`, `it.skip`, `test.only`, `test.skip`, …). That is the
+  shape to reach for whenever you catch yourself writing the same pattern with one
+  word changed.
+
+  Three things worth knowing:
+
+    * **The regex runs against the node's own text, verbatim** — including the
+      quotes, for a string literal. Constraining an import source means matching
+      `'../../lib'` *with* the quote character in it: `regex: '^.\.\./'` matches
+      and `regex: '^\.\./'` does not. Anchor with `^` and `$` or you will match
+      substrings you did not mean to.
+    * **A constraint can only narrow, never widen.** It filters what the pattern
+      already captured; it cannot make the pattern reach further.
+    * **A name the pattern never binds is a load-time error**, not a silent no-op:
+      ast-grep refuses the rule with *Undefined meta var `X` used in `constraints`*.
+      Typos in this block fail loudly, which is the one place in rule authoring you
+      get that for free.
+
+  Legitimate exception, on the offending line:
+
+      it.skip('flaky under load', run) // ast-grep-ignore: no-focused-or-skipped-test
+
+  A trailing `// ast-grep-ignore: <id>` suppresses that line; the same comment
+  standing on the line above suppresses the line below it. Naming the id is what
+  keeps the exception narrow — a bare `// ast-grep-ignore` switches off every rule
+  there, including ones written later. Path-wide exceptions go in `ignores` below.
+
+rule:
+  pattern: $FN.$MODIFIER($$$ARGS)
+
+constraints:
+  FN:
+    regex: '^(it|test|describe)$'
+  MODIFIER:
+    regex: '^(only|skip)$'
+
+ignores:
+  - "**/*.d.ts"
+  - "**/dist/**"
+  - "**/node_modules/**"
