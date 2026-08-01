@@ -38,9 +38,10 @@ Read the scan JSON before anything else. It carries the docs that were read, eve
 currently enforced, and its own first-pass split into `enforced` and `unenforced`.
 
 The cookbook JSON is the second one: six worked example rules, each with what it
-`demonstrates` and the `uses` list of the constructs its body contains. It is the
-technique lookup for step 2 and the citation for step 5 — a **catalogue to read from, not
-an install menu**. This skill installs nothing and writes nothing.
+`demonstrates`, the `uses` list of the constructs its body contains, and a `path` pair —
+`path.rule` and `path.test` — naming where to read it. It is the technique lookup for
+step 2 and the citation for step 5 — a **catalogue to read from, not an install menu**.
+This skill installs nothing and writes nothing.
 
 | Preflight | Meaning | Do |
 |---|---|---|
@@ -55,6 +56,12 @@ actually has (`docs/*.md`, `CLAUDE.md`, `constraints.md`, `taste.md`, `spec.md`)
 `/ast-grep-rules:init` to point `conventions_path` / `convention_docs` at them. Reporting
 "no gaps found" against zero documents is the worst outcome this skill has, because it
 reads as a clean bill of health.
+
+**`docs_skipped` is the same failure, half-sized, and it is not a stop.** When only some
+configured docs are missing the audit runs over the rest — so say, in the report itself,
+which paths were skipped and that the audit is partial. A convention stated only in a doc
+that is not there reads exactly like a convention nobody wrote down. Offer the same fix:
+Glob for what the repo actually has, and `/ast-grep-rules:init` to repoint the config.
 
 An **empty rules inventory** is not an error — a repo with zero rules is the repo that
 needs this most. Say so and audit normally.
@@ -76,9 +83,10 @@ needs this most. Say so and audit normally.
 - **Not-expressible is a finding, not a failure.** Routing a convention to oxlint or to
   the check script is a real outcome that closes the loop honestly. Silently dropping it
   is what leaves the same gap open next quarter.
-- **Cite the cookbook by reference.** An example is read at its path under `examples/` and
-  named in the report. Never install one — this skill has no installer and no `Write`, and
-  an audit that cites six examples still leaves the rules dir exactly as it found it.
+- **Cite the cookbook by reference.** An example is read at the `path` its preflight entry
+  carries, and named in the report. Never install one — this skill has no installer and no
+  `Write`, and an audit that cites six examples still leaves the rules dir exactly as it
+  found it.
 
 ## The technique lookup
 
@@ -103,11 +111,12 @@ and the second is the load-bearing one:
 | **The claim is positional** — "no `await` inside a `forEach` callback", "nothing under `runtime/` may import X". It is about where a node sits or what it contains. | `inside:` / `has:`, with `stopBy: end` | `no-async-array-callback` |
 | **The claim governs one tree** — "packages may not log", a doc that only speaks for one workspace. | top-level `files:`, and `ignores:` | `no-console-in-packages` |
 
-Open the example with the **Read** tool before citing it —
-`${CLAUDE_PLUGIN_ROOT}/examples/rules/<id>.yml`, with its fixture at
-`${CLAUDE_PLUGIN_ROOT}/examples/tests/<id>-test.yml`. Not `cat`: these are plugin paths
-outside the repo, and a session with tighter Bash permissions than yours will stop on one.
-The `note:` block is
+Open the example with the **Read** tool before citing it, at the paths its preflight entry
+carries: `path.rule` for the rule, `path.test` for its fixture. Take both from the JSON
+rather than composing them — where the cookbook lives is the installer's business, and a
+path spelled out here goes stale the first time it moves. Not `cat`: these are plugin
+paths outside the repo, and a session with tighter Bash permissions than yours will stop
+on one. The `note:` block is
 where the technique is taught and where its failure modes are — a `kind:` that covers only
 one of a construct's several spellings, a `regex:` that finds the word in every string in
 the repo. Reading it is also what stops you promising a shape the construct cannot hold.
@@ -275,9 +284,10 @@ because that is what it asks for first:
 - **Must fail** — one concrete, compilable line that violates it.
 - **Must pass** — one concrete near-miss line that must stay quiet.
 - **Technique** — the construct that expresses it, and the example that demonstrates that
-  construct, by path: *"`kind:` — see `examples/rules/no-enum-declaration.yml`."* One
-  line. Say once, at the top of the work list, that these are read rather than installed,
-  so a report citing three examples cannot be mistaken for three rules about to land.
+  construct, cited by id and by the `path.rule` the listing gave for it: *"`kind:` — see
+  the `no-enum-declaration` example, read at its `path.rule`."* One line. Say once, at the
+  top of the work list, that these are read rather than installed, so a report citing
+  three examples cannot be mistaken for three rules about to land.
 - **Live hits**, if step 4 found any.
 
 **The routed buckets, each with its statement and its destination.** `needs-type-info`
@@ -340,10 +350,10 @@ Then, two follow-ups worth naming once:
   `unenforced` list and it means nothing. Read the doc; step 1 is the whole audit here, and
   the report should say the scan contributed nothing.
 - **A monorepo where a doc governs one package.** Say which tree each convention actually
-  governs, and note it as the `files:` glob the eventual rule will need —
-  `examples/rules/no-console-in-packages.yml` is the worked case, including why `files:`
-  is a sibling of `rule:` rather than something inside it. A repo-wide rule for a
-  package-local convention is a rule that gets suppressed everywhere.
+  governs, and note it as the `files:` glob the eventual rule will need — the
+  `no-console-in-packages` example is the worked case, including why `files:` is a sibling
+  of `rule:` rather than something inside it. A repo-wide rule for a package-local
+  convention is a rule that gets suppressed everywhere.
 - **The same convention stated in two docs.** Report it once, cite both locations.
 - **A convention already declined once.** You cannot know that from here — this skill has
   no memory and no store. That is the point of suggesting the rule id in the doc line, and

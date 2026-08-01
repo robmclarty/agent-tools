@@ -446,9 +446,17 @@ that calls `pnpm scaffold:ast-grep-rule <kebab-id>` instead of hand-writing YAML
     - seam: `plugins/ast-grep-rules/README.md`, `README.md`
     - model: sonnet — patterned on `plugins/version/README.md`; the three findings are transcription from the park list, not derivation
 
-16. [ ] chore: verify both loops end to end in a throwaway repo — **done when:** in a harness repo, `/audit` → `/rule` promotes one stated convention to a rule with a passing fixture, **and** hook → `/lesson` → `/mine` → `/rule` promotes one induced friction event; both transcripts land in the build log and the scratch dir is removed
+16. [x] chore: verify both loops end to end in a throwaway repo — **done when:** in a harness repo, `/audit` → `/rule` promotes one stated convention to a rule with a passing fixture, **and** hook → `/lesson` → `/mine` → `/rule` promotes one induced friction event; both transcripts land in the build log and the scratch dir is removed
     - seam: `.plumbbob/builds/2026-07-24-ast-grep-rules-plugin/build-log.md`
     - model: opus — the whole finding is that this stalls in practice; a from-scratch repo is also the truest test, since it is what a new user has (C7)
+
+17. [ ] fix(ast-grep-rules): close the four gaps the live fires found — **done when:** `bash scripts/check.sh` is green with new unit tests proving each: `scan.mjs --conventions` names every configured doc it skipped when *some* exist (today `scan.mjs:330` filters on `d.exists` and only warns when **none** do, so the partial case is silent) and stays quiet when all exist; `scan.mjs --lessons` emits `candidates: <n>` equal to the summed buckets; `install-starter.mjs --list` carries a `path` for each example's rule and fixture; `/rule` and `/audit` take those paths from `--list`, with no literal `examples/` path left in either SKILL (six today); and `/lesson` plus the hook prose state that `lessons_path` is the only store that counts, so a blocked write is reported rather than redirected to a memory store `/mine` never reads
+    - seam: `plugins/ast-grep-rules/scripts/scan.mjs`, `plugins/ast-grep-rules/scripts/install-starter.mjs`, `plugins/ast-grep-rules/scripts/__tests__/`, `plugins/ast-grep-rules/skills/rule/SKILL.md`, `plugins/ast-grep-rules/skills/audit/SKILL.md`, `plugins/ast-grep-rules/skills/lesson/SKILL.md`, `plugins/ast-grep-rules/hooks/hooks.json`
+    - model: sonnet — three output fields and the prose that reads them; the live fires already did the judging, and every change lands against an existing suite
+
+18. [ ] docs: amend spike-01 with what steps 10 and 16 found — **done when:** the spike report records all three findings with the evidence each came from — `PostToolUse` prompt hooks receive no transcript (Stop only); `if:` is a free pre-LLM permission-rule filter whose brace alternation is silently inert; and a prompt hook cannot observe the conversation at all, so D15's *"did the user just correct the assistant"* signature is unreachable by that primitive — each stamped with the step that found it, and **D19's discharge left standing**, with the step-16 limitation recorded beside it as a fact about the primitive rather than a reversal of the verdict
+    - seam: `.plumbbob/builds/2026-07-24-ast-grep-rules-plugin/spike-01-hook-and-paths-primitives.md`
+    - model: sonnet — transcription from this build's log, not derivation
 
 ## Open questions
 

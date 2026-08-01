@@ -30,9 +30,11 @@ Read the resolver JSON before anything else. It carries the rules dir, the tests
 command that runs ast-grep in *this* repo, and whether a repo-local scaffolder exists.
 
 The cookbook JSON is the second one, and it is a **lookup table, not an install menu**:
-six worked example rules, each carrying what it `demonstrates` and the `uses` list of the
-constructs its body actually contains. Step 4 matches the rule you are about to write
-against that list. Nothing in this skill installs from it.
+six worked example rules, each carrying what it `demonstrates`, the `uses` list of the
+constructs its body actually contains, and a `path` pair — `path.rule` and `path.test` —
+naming exactly where to read that example. Step 4 matches the rule you are about to write
+against that list, and opens the winner at the path the listing gave. Nothing in this
+skill installs from it.
 
 | Preflight | Meaning | Do |
 |---|---|---|
@@ -51,10 +53,10 @@ them to `/ast-grep-rules:init`, which offers to add one.
   `PATH`. Always the preflight's `ast_grep_command`, with arguments appended.
 - **Never write a rule file by hand.** Scaffold it, then edit the TODOs. Hand-written
   YAML is how the four source repos ended up with six variants of the same rule.
-- **Cite the cookbook, never install from it.** An example is read, at its path under
-  `examples/`, and named in the report. A run that cites three examples still writes zero
-  files from them — the only rule this skill produces is this repo's own, at the id the
-  user asked for.
+- **Cite the cookbook, never install from it.** An example is read at the `path` its
+  preflight entry carries, and named in the report. A run that cites three examples still
+  writes zero files from them — the only rule this skill produces is this repo's own, at
+  the id the user asked for.
 - **Never `-U` before the rule is right.** `-U` freezes whatever the rule currently does,
   so recording early just enshrines the wrong answer as the expected one.
 - **Never edit source to satisfy a new rule without asking.** Report the hits, offer the
@@ -129,10 +131,12 @@ lines; the file itself carries the reasoning.
 | **The claim is about context** — where the node sits, or what it contains. "No `await` inside a `forEach` callback." | `inside:` / `has:`, with `stopBy: end` | `no-async-array-callback` |
 | **The convention governs part of the tree** — "packages may not log", "this applies under `src/` only". | top-level `files:`, and `ignores:` | `no-console-in-packages` |
 
-Open it with the **Read** tool — `${CLAUDE_PLUGIN_ROOT}/examples/rules/<id>.yml`, with its
-fixture alongside at `${CLAUDE_PLUGIN_ROOT}/examples/tests/<id>-test.yml`. Not `cat`:
-these are plugin paths outside the repo, and a session with tighter Bash permissions than
-yours will stop on one. The `note:` block is
+Open it with the **Read** tool, at the paths the preflight listing gives for that id:
+`path.rule` for the rule, `path.test` for its fixture. Take both from the JSON rather than
+composing them — the cookbook's layout is the installer's business, not this skill's, and
+a path spelled out here goes stale the first time it moves. Not `cat`: these are plugin
+paths outside the repo, and a session with tighter Bash permissions than yours will stop
+on one. The `note:` block is
 where the technique is taught, including the failure modes that cost the most time: one
 construct wearing several kind names, a `regex:` that finds the word in every string you
 have, a comment rule that cannot be suppressed by a comment on its own line. The fixture

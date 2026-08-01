@@ -39,10 +39,21 @@
  * template inside a fence, checkbox line included, and counting it would invent a
  * twelfth candidate out of documentation.
  *
+ * A configured convention doc that does not exist is skipped, and skipping it is
+ * *reported* — by name — whenever any other doc did exist. The silent version of that
+ * is the worst failure this script has: an audit that read one of two configured docs
+ * and found no gaps is indistinguishable from a clean bill of health, and four separate
+ * live runs flagged it independently. `candidates` is the same bargain in lessons mode:
+ * the item total is stated outright rather than left to be re-derived by summing
+ * `buckets`, because a hand-count is a place to be wrong about a number the script
+ * already knows.
+ *
  * Always emits exactly one JSON object on stdout:
  *
- *   { mode: 'lessons',     root, lessons_path, rules, entries, items, buckets, warnings }
- *   { mode: 'conventions', root, docs, rules, enforced, unenforced, warnings }
+ *   { mode: 'lessons',     root, lessons_path, rules, entries, candidates, items,
+ *     buckets, warnings }
+ *   { mode: 'conventions', root, docs, docs_skipped, rules, enforced, unenforced,
+ *     warnings }
  *   { mode: 'error',       error_type, message }
  *
  * Usage:
@@ -260,6 +271,10 @@ export function scan_lessons(root) {
     lessons_path: config.lessons_path,
     rules: { count: rules.length, ids: rules.map((r) => r.id).sort() },
     entries: parsed.entries.length,
+    // Stated, not implied. `buckets` is tallied from `items` in the same pass, so this
+    // is always their sum — and `entries - candidates` is the exact count of entries
+    // carrying no `- [ ] rule:` line, which is the one number `/mine` acts on.
+    candidates: items.length,
     items,
     buckets,
     warnings,
@@ -327,9 +342,19 @@ export function scan_conventions(root) {
   const { rules, warnings: rule_warnings } = inventory_rules(config.root, config.paths.rule_dirs);
   warnings.push(...rule_warnings);
 
+  // A configured doc that isn't there is skipped either way; what changes is whether
+  // anyone is told. Naming the skipped ones is the whole fix — the resolver already
+  // carries `exists`, and the partial case is the dangerous one, because an audit over
+  // half the configured set still reports "no gaps found".
+  const quote = (paths) => paths.map((path) => `\`${path}\``).join(', ');
   const docs = config.convention_docs.filter((d) => d.exists).map((d) => d.path);
+  const skipped = config.convention_docs.filter((d) => !d.exists).map((d) => d.path);
+
   if (docs.length === 0) {
-    warnings.push(`none of the configured convention docs exist (${config.convention_docs.map((d) => `\`${d.path}\``).join(', ')}) — nothing to audit.`);
+    warnings.push(`none of the configured convention docs exist (${quote(config.convention_docs.map((d) => d.path))}) — nothing to audit.`);
+  } else if (skipped.length > 0) {
+    const many = skipped.length > 1;
+    warnings.push(`${skipped.length} of ${config.convention_docs.length} configured convention docs ${many ? 'do' : 'does'} not exist and ${many ? 'were' : 'was'} skipped (${quote(skipped)}) — this audit covers ${quote(docs)} only, so a convention stated in a missing doc reads here as absent rather than as unenforced.`);
   }
 
   const enforced = [];
@@ -353,6 +378,7 @@ export function scan_conventions(root) {
     mode: 'conventions',
     root: config.root,
     docs,
+    docs_skipped: skipped,
     rules: { count: rules.length, ids: rules.map((r) => r.id).sort() },
     enforced,
     unenforced,

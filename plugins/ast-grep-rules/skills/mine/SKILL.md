@@ -94,18 +94,19 @@ lives, and they are what tells you whether the author's one-line judgment holds 
 
 Then compare two numbers the JSON hands you directly:
 
-- **`entries` vs the candidate total.** The JSON states `entries` outright. It does *not*
-  state how many items there are, so **get that total by adding up the five `buckets`
-  numbers — never by counting `items[]` by eye.** `buckets` is tallied from `items` in the
-  same pass, so the two cannot disagree: a total that does not match what you counted is
-  always a miscount, and never a bug in the scan. Do not report one as a bug, and do not
-  let it change any bucket's count.
-- **The difference is an exact count of entries carrying no `- [ ] rule:` line at all.**
-  Those are invisible to this skill permanently — not misfiled, *unseen*. Find them (grep
-  the log for `### Lesson:` and diff the titles against `items[]`) and **name every one by
-  title**. If you can name fewer than the gap says, re-add the buckets; if you can name
-  more, you are counting entries the scan did see. The fix is one line added by whoever
-  owns the log — the cheapest yield increase available, and nothing else will surface it.
+- **`entries` vs `candidates`.** The JSON states both outright — **take them as given and
+  never re-derive either by counting `items[]` or summing `buckets` by eye.** `buckets` is
+  tallied from `items` in the same pass and `candidates` is that same total, so the three
+  cannot disagree: a sum of your own that does not match `candidates` is always your
+  arithmetic, never a bug in the scan. Do not report one as a bug, and do not let it
+  change any bucket's count.
+- **`entries - candidates` is an exact count of entries carrying no `- [ ] rule:` line at
+  all.** Those are invisible to this skill permanently — not misfiled, *unseen*. Find them
+  (grep the log for `### Lesson:` and diff the titles against `items[]`) and **name every
+  one by title**. If you can name fewer than that difference, keep reading the log; if you
+  can name more, you are counting entries the scan did see. The fix is one line added by
+  whoever owns the log — the cheapest yield increase available, and nothing else will
+  surface it.
 - **`buckets` against your own reading**, which is step 2.
 
 If `$ARGUMENTS` narrowed the run, narrow here — and say what you narrowed to, so a partial

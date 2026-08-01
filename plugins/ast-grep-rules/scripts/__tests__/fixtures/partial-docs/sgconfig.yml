@@ -1,0 +1,4 @@
+# The partial-audit fixture: two of four configured convention docs are missing.
+# `docs/taste.md` and `docs/spec.md` are named in `.claude/ast-grep.json` and never
+# written — the shape a repo lands in when a doc gets renamed or was aspirational.
+ruleDirs: [rules]

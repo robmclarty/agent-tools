@@ -18,6 +18,10 @@ import {
 
 const fixture = (name) => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 const corpus = fixture('scan-corpus');
+// Four configured convention docs, two of them written. The partial case is the one
+// that used to pass silently, which is worse than the empty case: an audit over half
+// the configured set still reports "no gaps found".
+const partial_docs = fixture('partial-docs');
 const scan_cli = fileURLToPath(new URL('../scan.mjs', import.meta.url));
 
 // ---------------------------------------------------------------- lessons mode
@@ -38,6 +42,24 @@ test('lessons: the 11-checkbox corpus sorts into the D18 mix', () => {
   // 12 entries, 11 checkboxes: an entry with no checkbox is counted, not crashed on.
   assert.equal(s.entries, 12);
   assert.deepEqual(s.warnings, []);
+});
+
+test('lessons: candidates is stated outright and always equals the summed buckets', () => {
+  // The count `/mine` acts on, hand-counted until now — and a hand-count is a place to
+  // be wrong: a live run summed the buckets by eye, got a total that disagreed with
+  // itself, and invented a scan bug to explain its own arithmetic.
+  const s = scan_lessons(corpus);
+  const summed = Object.values(s.buckets).reduce((a, b) => a + b, 0);
+
+  assert.equal(s.candidates, 11);
+  assert.equal(s.candidates, summed);
+  assert.equal(s.candidates, s.items.length);
+  // `entries - candidates` is the number `/mine` reports: entries with no `rule:` line
+  // at all, which are invisible to the classifier rather than misfiled by it.
+  assert.equal(s.entries - s.candidates, 1);
+
+  // An empty log states zero rather than omitting the field.
+  assert.equal(scan_lessons(fixture('bare-layout')).candidates, 0);
 });
 
 test('lessons: the one promotable is the anchored-fence candidate', () => {
@@ -171,6 +193,34 @@ test('conventions: a non-normative bullet is not a convention', () => {
   assert.equal(everything.some((c) => c.text.includes('CHANGELOG')), false);
 });
 
+test('conventions: names every doc it skipped when only some of them exist', () => {
+  const s = scan_conventions(partial_docs);
+
+  assert.deepEqual(s.docs, ['docs/conventions.md', 'CLAUDE.md']);
+  assert.deepEqual(s.docs_skipped, ['docs/taste.md', 'docs/spec.md']);
+
+  // Exactly one warning about it, and it names *both* missing docs — a warning that
+  // said "some docs are missing" without naming them would leave the user with the
+  // same question they started with.
+  const skipped = s.warnings.filter((w) => w.includes('skipped'));
+  assert.equal(skipped.length, 1);
+  for (const path of s.docs_skipped) assert.ok(skipped[0].includes(`\`${path}\``), path);
+  // And it says what was covered, so the report's scope is legible from the warning.
+  for (const path of s.docs) assert.ok(skipped[0].includes(`\`${path}\``), path);
+
+  // The audit still runs over what does exist — this is a warning, not a stop.
+  assert.equal(s.unenforced.length, 2);
+});
+
+test('conventions: stays quiet when every configured doc exists', () => {
+  // The corpus configures exactly the two docs it ships, so a skipped-doc warning here
+  // would be noise on the clean path — and noise is how a real warning gets ignored.
+  const s = scan_conventions(corpus);
+
+  assert.deepEqual(s.docs_skipped, []);
+  assert.deepEqual(s.warnings.filter((w) => w.includes('skipped')), []);
+});
+
 test('conventions: a repo with no convention docs warns instead of failing', () => {
   const s = scan_conventions(fixture('bare-layout'));
 
@@ -179,6 +229,10 @@ test('conventions: a repo with no convention docs warns instead of failing', () 
   assert.deepEqual(s.enforced, []);
   assert.deepEqual(s.unenforced, []);
   assert.equal(s.warnings.filter((w) => w.includes('none of the configured convention docs exist')).length, 1);
+  // All three are reported as skipped, and the none-case warning is the only one — the
+  // partial warning would be a second way of saying the same thing.
+  assert.deepEqual(s.docs_skipped, ['docs/house-style.md', 'CLAUDE.md', 'docs/spec.md']);
+  assert.deepEqual(s.warnings.filter((w) => w.includes('were skipped')), []);
 });
 
 test('extract_conventions skips fenced blocks', () => {

@@ -33,7 +33,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import { after, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
@@ -361,6 +361,24 @@ test('the catalogue is fully legible without installing anything', () => {
   assert.deepEqual(listing(root), before);
   assert.deepEqual(readdirSync(join(root, 'rules')), []);
   assert.deepEqual(readdirSync(join(root, 'tests')), []);
+});
+
+test('the catalogue carries a readable path to each example rule and fixture', () => {
+  // `/rule` and `/audit` cite the cookbook by opening these two files. Handing them the
+  // paths is what lets both SKILLs stop spelling out the bundled layout in prose, where
+  // six copies of it drift the first time a directory moves.
+  const out = JSON.parse(execFileSync('node', [cli, '--list'], { encoding: 'utf8' }));
+
+  for (const example of out.examples) {
+    assert.equal(example.path.rule, join(examples_dir, 'rules', `${example.id}.yml`));
+    assert.equal(example.path.test, join(examples_dir, 'tests', `${example.id}-test.yml`));
+    // Absolute, because the citation is a Read from a session whose cwd is the
+    // adopter's repo, not this plugin.
+    for (const path of Object.values(example.path)) {
+      assert.ok(isAbsolute(path), `${example.id}: ${path}`);
+      assert.ok(existsSync(path), `${example.id}: ${path}`);
+    }
+  }
 });
 
 test('there is no flag that installs more than the user named', () => {

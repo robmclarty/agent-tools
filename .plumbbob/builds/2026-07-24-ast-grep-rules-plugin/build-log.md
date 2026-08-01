@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 16 — chore: verify both loops end to end in a throwaway repo
+**Current step:** 17 — fix(ast-grep-rules): close the four gaps the live fires found
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -38,28 +38,30 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 13. feat: replace the starter tiers with a technique cookbook
 - ☑ 14. feat: point /rule and /audit at the cookbook when authoring
 - ☑ 15. docs: add the plugin README and root marketplace table row
-- ☐ 16. chore: verify both loops end to end in a throwaway repo
+- ☑ 16. chore: verify both loops end to end in a throwaway repo
+- ☐ 17. fix(ast-grep-rules): close the four gaps the live fires found
+- ☐ 18. docs: amend spike-01 with what steps 10 and 16 found
 
 ## Park list
 
 > Mid-step, every new problem / idea / "ooh what if" lands HERE, untouched, and you
 > go straight back to the step. Acting the instant an idea arrives is the disease.
 > Capture is one line (`/pb-park` composes it). Harvest happens only at the boundary.
-- [ ] step 5: pin @ast-grep/cli in a root private package.json vs. install per scratch repo — decide where the harness makes the cost visible; versioning needs no package.json (marketplace.json metadata.version is authoritative)
-- [ ] A local marketplace registers under the manifest's own name ('robmclarty' → source: directory, path: <abs>), which collides with the globally-registered github marketplace of the same name — so --plugin-dir is the residue-free way to load this plugin from a working tree. Worth a line in the step-13 README.
-- [ ] step 14's headless verification can't observe a write under .claude/ — the harness gates it as a sensitive path and a non-interactive run has nowhere to send the prompt; either drive that leg interactively or find a scoped grant the classifier accepts
-- [ ] ast-grep's snapshot requirement changed between 0.42.1 (missing snapshot tolerated) and 0.45.0 (missing snapshot fails) — the starter tiers in step 12 must ship snapshots, and the step-13 README should name a minimum ast-grep version rather than assume one
-- [ ] all three /audit live fires independently flagged it: a convention_docs entry pointing at a file that doesn't exist produces no warning — scan.mjs conventions mode should say which configured docs it skipped, not just which it read (config.mjs already carries the exists flag)
-- [ ] Amend spike-01 with step 10's two live-fire findings: PostToolUse prompt hooks get no transcript (Stop only), and if: is a free pre-LLM permission-rule filter whose brace alternation is silently inert
-- [ ] scan.mjs --lessons states `entries` but not the item count, so /mine has to derive the total by summing `buckets`; a `candidates: <n>` field would remove the hand-count that made a live-fire run miscount and then invent a scan bug to explain it
-- [ ] the four source repos still carry the buggy no-this-keyword: its note claims a `this: void` parameter is exempt but the rule flags it — a fleet fix, out of this build's scope
-- [ ] D22 picked foundry's rule variants from a 4-repo survey that missed fascicle (foundry's successor, committed daily, 23 rules) — the conclusion survives but the stated rationale is stale; /plumbbob:refine when convenient
-- [ ] D22's suppression claim does not hold on ast-grep 0.45.0: '// ast-grep-ignore-next-line: <id>' behaves identically to '// ast-grep-ignore: <id>' (both scoped to the named id, both suppress the following line) — foundry's bf33067 rationale is version-specific at best; the cookbook notes document the trailing form without repeating the 'the other one is broken' claim
-- [ ] a rule matching comment nodes cannot be suppressed by an ignore embedded in the comment it matches — ast-grep reads a comment starting its own line as a directive for the NEXT line, so '// TODO: x // ast-grep-ignore: id' leaves the TODO flagged and the suppression unused; worth a line in the step-14 README's authoring section
-- [ ] D14 also says /rule and /audit should cite the examples when authoring; step 13's seam covered only /init, so both skills still scaffold and propose without pointing at the cookbook — a one-section addition to each
-- [ ] install-starter.mjs --list returns ids but no paths, so /rule and /audit hard-code examples/rules/<id>.yml and examples/tests/<id>-test.yml in prose — a path: field in the --list JSON would make the layout single-sourced
-- [ ] step 16: D15's 'did the user correct the assistant' signature is unobservable to a prompt hook (one diff, no dialogue) and 'did the assistant undo its own change' is a weak proxy — it stayed silent on the real correction and fired on a turn the model itself judged unworthy; a command hook could read transcript_path, so this reopens D19 and is /plumbbob:refine work, not a prompt tweak
-- [ ] step 16: blocked from docs/lessons.md, the child agent silently recorded the lesson in its own auto-memory instead — friction diverts to a store /mine never reads; /lesson or the hook prose could say 'the log file is the only store that counts'
+- [x] step 5: pin @ast-grep/cli in a root private package.json vs. install per scratch repo — decide where the harness makes the cost visible; versioning needs no package.json (marketplace.json metadata.version is authoritative)
+- [x] A local marketplace registers under the manifest's own name ('robmclarty' → source: directory, path: <abs>), which collides with the globally-registered github marketplace of the same name — so --plugin-dir is the residue-free way to load this plugin from a working tree. Worth a line in the step-13 README.
+- [x] step 14's headless verification can't observe a write under .claude/ — the harness gates it as a sensitive path and a non-interactive run has nowhere to send the prompt; either drive that leg interactively or find a scoped grant the classifier accepts
+- [x] ast-grep's snapshot requirement changed between 0.42.1 (missing snapshot tolerated) and 0.45.0 (missing snapshot fails) — the starter tiers in step 12 must ship snapshots, and the step-13 README should name a minimum ast-grep version rather than assume one
+- [x] all three /audit live fires independently flagged it: a convention_docs entry pointing at a file that doesn't exist produces no warning — scan.mjs conventions mode should say which configured docs it skipped, not just which it read (config.mjs already carries the exists flag)
+- [x] Amend spike-01 with step 10's two live-fire findings: PostToolUse prompt hooks get no transcript (Stop only), and if: is a free pre-LLM permission-rule filter whose brace alternation is silently inert
+- [x] scan.mjs --lessons states `entries` but not the item count, so /mine has to derive the total by summing `buckets`; a `candidates: <n>` field would remove the hand-count that made a live-fire run miscount and then invent a scan bug to explain it
+- [x] the four source repos still carry the buggy no-this-keyword: its note claims a `this: void` parameter is exempt but the rule flags it — a fleet fix, out of this build's scope
+- [x] D22 picked foundry's rule variants from a 4-repo survey that missed fascicle (foundry's successor, committed daily, 23 rules) — the conclusion survives but the stated rationale is stale; /plumbbob:refine when convenient
+- [x] D22's suppression claim does not hold on ast-grep 0.45.0: '// ast-grep-ignore-next-line: <id>' behaves identically to '// ast-grep-ignore: <id>' (both scoped to the named id, both suppress the following line) — foundry's bf33067 rationale is version-specific at best; the cookbook notes document the trailing form without repeating the 'the other one is broken' claim
+- [x] a rule matching comment nodes cannot be suppressed by an ignore embedded in the comment it matches — ast-grep reads a comment starting its own line as a directive for the NEXT line, so '// TODO: x // ast-grep-ignore: id' leaves the TODO flagged and the suppression unused; worth a line in the step-14 README's authoring section
+- [x] D14 also says /rule and /audit should cite the examples when authoring; step 13's seam covered only /init, so both skills still scaffold and propose without pointing at the cookbook — a one-section addition to each
+- [x] install-starter.mjs --list returns ids but no paths, so /rule and /audit hard-code examples/rules/<id>.yml and examples/tests/<id>-test.yml in prose — a path: field in the --list JSON would make the layout single-sourced
+- [x] step 16: D15's 'did the user correct the assistant' signature is unobservable to a prompt hook (one diff, no dialogue) and 'did the assistant undo its own change' is a weak proxy — it stayed silent on the real correction and fired on a turn the model itself judged unworthy; a command hook could read transcript_path, so this reopens D19 and is /plumbbob:refine work, not a prompt tweak
+- [x] step 16: blocked from docs/lessons.md, the child agent silently recorded the lesson in its own auto-memory instead — friction diverts to a store /mine never reads; /lesson or the hook prose could say 'the log file is the only store that counts'
 
 ## Harvest  *(run `/pb-harvest` at each step boundary, after green)*
 
@@ -77,7 +79,58 @@ from sprawling across branches.
 
 Harvest results this boundary:
 
-- (none yet)
+**2026-07-31 — boundary after step 16. All 15 parked items harvested, none left open.**
+No blockers and no pivot signals: every step landed, and both loops held under live fire.
+Five items turned out to be **already delivered** by a later step than the one that parked
+them — verified against the tree before classifying, so that work was closed rather than
+re-deferred. The remaining ten are all **tangent**; Rob split them five to do and five to
+kill — the kill list reads as four bullets because the two D22/D19 record-corrections
+share one.
+
+**Closed — delivered by a later step** (no class; the work exists)
+
+| Item | Delivered by | Verified |
+|---|---|---|
+| `--plugin-dir` as the residue-free load path | step 15 | `plugins/ast-grep-rules/README.md` |
+| ast-grep version + why a missing snapshot is fatal | step 15 | same README, authoring section |
+| comment-node ignores cannot suppress from inside | step 15 | `README.md:179–183` |
+| `/rule` and `/audit` cite the cookbook when authoring | step 14 | `--list` preflight in both SKILLs |
+| D22's stale four-repo rationale (missed fascicle) | the 2026-07-30 refine | D22 now re-based on the portfolio |
+
+**tangent — do**
+
+- **`convention_docs` pointing at a missing file warns nobody.** The highest-value item in
+  the list: `scan.mjs --conventions` audits one doc while the config claims two, silently.
+  Flagged independently by all three step-8 live fires and again by step 16 — four runs, no
+  prompting. `config.mjs` already carries the `exists` flag, so the fix is reporting what it
+  already knows.
+- **`scan.mjs --lessons` states `entries` but no item count.** A `candidates: <n>` field.
+  Cheap, and it has already cost something real: a step-11 run miscounted by hand and then
+  invented a scan bug to explain its own arithmetic.
+- **`install-starter.mjs --list` emits no `path`.** Confirmed at harvest — the keys are
+  `demonstrates, encodes, files, id, path_scoped, severity, uses` — so `/rule` and `/audit`
+  hard-code the `examples/` layout in prose. A `path:` field single-sources it.
+- **Friction diverted to auto-memory.** A step-16 sub-agent blocked from `docs/lessons.md`
+  wrote the lesson into its own memory store and reported it as recorded. One line in
+  `/lesson` or the hook prose: the log file is the only store that counts.
+- **Amend spike-01.** Confirmed unamended at harvest. It now owes three findings, not two —
+  step 10's pair, plus step 16's discovery that a prompt hook cannot see the conversation at
+  all.
+
+**tangent — kill**
+
+- **D22's suppression claim, and the D19 reopening.** Both are places where `intent.md`
+  still asserts something a later step disproved: that `ast-grep-ignore-next-line` is broken
+  (it behaves identically on 0.45.0), and that D19's command-hook fallback is safely
+  discharged (step 16 found the prompt hook cannot observe half of D15's gate). Killed
+  deliberately — the artifacts are already correct, the cookbook notes never repeat the false
+  claim, and both findings are recorded in full in this log's step-7 and step-16 entries.
+  Decisions stay as the record of what was decided when, not as a living spec.
+- **Root `package.json` for `@ast-grep/cli`.** The status quo is what C1 already implies.
+- **Headless runs cannot observe writes under `.claude/`.** A harness limit, already worked
+  around by driving that leg interactively in step 6.
+- **The buggy `no-this-keyword` in the four source repos.** C6 puts them out of scope; fleet
+  work, not this build's.
 
 ## Log
 
@@ -465,3 +518,4 @@ folder, so it rides the branch into the PR.)*
   zero installs, adapt-not-adopt holding under live fire (D23). Each rule landed as exactly
   three files (rule, fixture, snapshot), never two — D3's contract survived the one place it
   was most likely to slip, an agent under time pressure at the end of a long session.
+- 2026-07-31 — step 16 checkpointed · 78813161f — chore: verify both loops end to end in a throwaway repo (535m)

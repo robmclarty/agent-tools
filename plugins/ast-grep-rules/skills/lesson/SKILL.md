@@ -47,6 +47,13 @@ create it, so that the entry template has exactly one author.
 
 ## Conventions
 
+- **`lessons_path` is the only store that counts.** `/ast-grep-rules:mine` reads that one
+  file and nothing else — not a memory directory, not a scratch note, not the transcript.
+  Writing the entry somewhere else is not a fallback, it is a silent drop: the loop this
+  plugin exists to close never sees it. If the write is refused or blocked, say so plainly
+  and hand back the entry text so a human can land it — see **Edge cases**. **Reporting a
+  lesson as recorded when it went anywhere but `lessons_path` is the one failure here that
+  looks exactly like success** — a real session did precisely that.
 - **One entry, one friction event.** Two things went wrong in one session? Two entries.
   They get classified separately and they route separately.
 - **Exactly one `- [ ] rule:` line per entry, always** — including when the honest answer
@@ -227,14 +234,15 @@ node ${CLAUDE_PLUGIN_ROOT}/scripts/scan.mjs --lessons
 
 Three things to confirm:
 
-1. **`entries` went up by exactly one** (or is unchanged, for a step-3 amendment).
+1. **`entries` and `candidates` both went up by exactly one** (or are both unchanged, for
+   a step-3 amendment). `candidates` is the item total, stated outright — no summing.
 2. **Your title appears verbatim** in an `items[]` entry, under today's date.
 3. **`bucket` is the one you intended**, and its `signal` says which cue matched.
 
 | Symptom | Cause |
 |---|---|
 | the title is missing entirely | the entry did not parse — usually `###Lesson:` with no space, a date heading carrying extra text, or the whole block landing inside a fence |
-| `entries` went up but no new `items[]` | the entry has no `- [ ] rule:` line, so the miner will never see it |
+| `entries` went up but `candidates` did not | the entry has no `- [ ] rule:` line, so the miner will never see it |
 | the bucket is wrong | the `rule:` sentence says something other than what you meant — rewrite the sentence |
 
 Fix the entry, not the scan, and re-run until all three hold.
@@ -319,5 +327,11 @@ Always, when any of these happen:
   one.
 - **Several distinct frictions in one session.** One entry each, under the same date
   heading. They classify and route independently.
+- **The write to `lessons_path` is blocked** — a permission refusal, a read-only tree, a
+  sandbox. **Report the block; do not reroute.** Say which path was refused, print the
+  composed entry in full so nothing is lost, and give the human the one command that lands
+  it. Do not write it to a memory store, a notes file, or anywhere else and call it
+  recorded: `/ast-grep-rules:mine` reads `lessons_path` alone, so an entry parked
+  elsewhere is worse than an entry never written — it reads as done and mines as absent.
 - **The user declines to record it.** Nothing is written. Say what the entry would have
   said in one line, so the judgment is at least in the transcript.

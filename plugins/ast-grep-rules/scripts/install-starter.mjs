@@ -229,13 +229,28 @@ function read_example(id) {
 
 /**
  * The whole cookbook, as the offer is made from it: what each example teaches, what it
- * would enforce, and which constructs its rule body actually uses. Writes nothing —
- * reading the catalogue is the no-install path through this script.
+ * would enforce, which constructs its rule body actually uses, and where to read the
+ * rule and its fixture. Writes nothing — reading the catalogue is the no-install path
+ * through this script, and the `path` pair is what makes citing an example cost no
+ * install at all.
  */
 export function list_examples() {
   return example_ids().map((id) => {
-    const { severity, files, demonstrates, encodes, uses } = read_example(id);
-    return { id, demonstrates, encodes, uses, severity, path_scoped: files.length > 0, files };
+    const { severity, files, demonstrates, encodes, uses, rule_source, test_source } = read_example(id);
+    return {
+      id,
+      demonstrates,
+      encodes,
+      uses,
+      severity,
+      // Where to *read* the example, not where an install would put it. `/rule` and
+      // `/audit` cite the cookbook by opening these files, so the catalogue hands them
+      // the paths rather than leaving each SKILL to spell out the bundled layout in
+      // prose — six hard-coded paths that go stale the first time it moves.
+      path: { rule: rule_source, test: test_source },
+      path_scoped: files.length > 0,
+      files,
+    };
   });
 }
 
