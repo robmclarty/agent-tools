@@ -82,13 +82,23 @@ skill is read-only by construction: no `Write`, no `Edit`.
 The feeder has three stages, and each fixes a way the mechanism has stalled
 before:
 
-1. **The hook.** A `PostToolUse` prompt hook watches `Edit`/`Write` on
-   `.ts`/`.tsx` files and asks one narrow question of the diff alone: did this
-   edit plainly take work back — code removed with nothing in its place, one
-   construct swapped for a structurally different one? Ordinary forward
-   progress stays silent. On a hit it *offers* `/ast-grep-rules:lesson`; it
-   never writes anything itself. (Recording friction by remembering to invoke
-   a skill is the discipline that failed everywhere it shipped.)
+1. **The hook.** A `PostToolUse` command hook watches `Edit`/`Write` on
+   `.ts`/`.tsx` files and asks one question the diff alone cannot answer: is
+   this edit rewriting code *the assistant itself wrote earlier in this
+   session* — and did you say something in between? A human turn between the
+   assistant's own edits is the correction signature; the same rewrite with no
+   turn between is the weaker undo signature. Ordinary forward progress stays
+   silent, and so does the second edit of an episode that already offered once.
+   On a hit it *offers* `/ast-grep-rules:lesson`; it never writes anything
+   itself. (Recording friction by remembering to invoke a skill is the
+   discipline that failed everywhere it shipped.)
+
+   The gate is a deterministic script — no model call, ~40ms, reading the
+   session transcript. It started as an LLM judging each diff in isolation,
+   which could not see the conversation and so could not detect a correction at
+   all; it stayed silent on the turn that carried the friction and fired on one
+   that did not. It also fails open: any unreadable input is silence, never a
+   broken turn.
 2. **`/ast-grep-rules:lesson`** appends one template-conforming entry to the
    friction log (`lessons_path`, default `docs/lessons.md`) — append-only
    prose, thirty seconds, worth it even when nothing structural follows. A

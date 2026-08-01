@@ -23,6 +23,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
+import { render_offer } from '../friction-gate.mjs';
+
 // Relative to the plugin root. A file that moved out from under these reads throws
 // ENOENT rather than passing vacuously, which is the behaviour we want from a suite
 // whose every assertion is "this text says X".
@@ -74,15 +76,14 @@ test('lesson and the hook both name the friction log as the only store', () => {
   assert.match(lesson, /blocked/);
   assert.match(lesson, /do not reroute/i);
 
-  const hooks = JSON.parse(read('hooks/hooks.json'));
-  const prompts = hooks.hooks.PostToolUse.flatMap((m) => m.hooks).map((h) => h.prompt);
-
-  // Every copy, not just the first: the manifest carries one per matcher, and a claim
-  // that holds in three of four is a claim that fails on a `.tsx` write.
-  assert.equal(prompts.length, 4);
-  for (const prompt of prompts) {
-    assert.match(prompt, /friction log/);
-    assert.match(prompt, /memory store/);
-    assert.match(prompt, /is not recorded/);
+  // The hook's half of the claim used to live in `hooks.json` as four duplicated prompt
+  // strings, so this asserted all four. The gate is now a deterministic script and the
+  // prose is one function — but the claim still has to hold on *every* path that reaches
+  // the user, which is now both offer variants rather than four config copies.
+  for (const signature of ['user-correction', 'self-revert']) {
+    const offer = render_offer(signature, '/repo/src/app.ts');
+    assert.match(offer, /friction log/);
+    assert.match(offer, /memory store/);
+    assert.match(offer, /is not recorded/);
   }
 });

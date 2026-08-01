@@ -5,36 +5,9 @@
         "matcher": "Edit|Write",
         "hooks": [
           {
-            "type": "prompt",
-            "if": "Edit(**/*.ts)",
-            "prompt": "This repo keeps a friction log — /ast-grep-rules:lesson records one in about thirty seconds — so that mistakes worth preventing can become enforced ast-grep rules.\n\nBelow is one file edit, as JSON. Judge that edit alone; you cannot see the conversation, so do not guess at it.\n\nAnswer ok=true, reason \"ordinary edit\", for forward progress: new code, a rename, a changed string or number, formatting, comments, added tests, or extending something that already worked. That is the common answer and it stays silent. When in doubt, answer ok=true.\n\nAnswer ok=false only when the diff plainly takes work back: code removed with nothing put in its place, or one construct swapped for a structurally different one — a class for a function, require for import, an untyped value for a typed one. For that answer, name in the reason what was taken back and what replaced it, then close with: if this followed a correction, offer /ast-grep-rules:lesson before moving on, so the cause is recorded while it is fresh — one entry, and the user decides. The entry belongs in this repo's own friction log and nowhere else; a lesson written to a memory store or a scratch note is not recorded, because /ast-grep-rules:mine never reads those. If that file cannot be written, say so rather than putting the entry somewhere it will not be found.\n\n$ARGUMENTS",
-            "continueOnBlock": true,
-            "timeout": 15,
-            "statusMessage": "checking whether that edit is worth a lesson"
-          },
-          {
-            "type": "prompt",
-            "if": "Edit(**/*.tsx)",
-            "prompt": "This repo keeps a friction log — /ast-grep-rules:lesson records one in about thirty seconds — so that mistakes worth preventing can become enforced ast-grep rules.\n\nBelow is one file edit, as JSON. Judge that edit alone; you cannot see the conversation, so do not guess at it.\n\nAnswer ok=true, reason \"ordinary edit\", for forward progress: new code, a rename, a changed string or number, formatting, comments, added tests, or extending something that already worked. That is the common answer and it stays silent. When in doubt, answer ok=true.\n\nAnswer ok=false only when the diff plainly takes work back: code removed with nothing put in its place, or one construct swapped for a structurally different one — a class for a function, require for import, an untyped value for a typed one. For that answer, name in the reason what was taken back and what replaced it, then close with: if this followed a correction, offer /ast-grep-rules:lesson before moving on, so the cause is recorded while it is fresh — one entry, and the user decides. The entry belongs in this repo's own friction log and nowhere else; a lesson written to a memory store or a scratch note is not recorded, because /ast-grep-rules:mine never reads those. If that file cannot be written, say so rather than putting the entry somewhere it will not be found.\n\n$ARGUMENTS",
-            "continueOnBlock": true,
-            "timeout": 15,
-            "statusMessage": "checking whether that edit is worth a lesson"
-          },
-          {
-            "type": "prompt",
-            "if": "Write(**/*.ts)",
-            "prompt": "This repo keeps a friction log — /ast-grep-rules:lesson records one in about thirty seconds — so that mistakes worth preventing can become enforced ast-grep rules.\n\nBelow is one file edit, as JSON. Judge that edit alone; you cannot see the conversation, so do not guess at it.\n\nAnswer ok=true, reason \"ordinary edit\", for forward progress: new code, a rename, a changed string or number, formatting, comments, added tests, or extending something that already worked. That is the common answer and it stays silent. When in doubt, answer ok=true.\n\nAnswer ok=false only when the diff plainly takes work back: code removed with nothing put in its place, or one construct swapped for a structurally different one — a class for a function, require for import, an untyped value for a typed one. For that answer, name in the reason what was taken back and what replaced it, then close with: if this followed a correction, offer /ast-grep-rules:lesson before moving on, so the cause is recorded while it is fresh — one entry, and the user decides. The entry belongs in this repo's own friction log and nowhere else; a lesson written to a memory store or a scratch note is not recorded, because /ast-grep-rules:mine never reads those. If that file cannot be written, say so rather than putting the entry somewhere it will not be found.\n\n$ARGUMENTS",
-            "continueOnBlock": true,
-            "timeout": 15,
-            "statusMessage": "checking whether that edit is worth a lesson"
-          },
-          {
-            "type": "prompt",
-            "if": "Write(**/*.tsx)",
-            "prompt": "This repo keeps a friction log — /ast-grep-rules:lesson records one in about thirty seconds — so that mistakes worth preventing can become enforced ast-grep rules.\n\nBelow is one file edit, as JSON. Judge that edit alone; you cannot see the conversation, so do not guess at it.\n\nAnswer ok=true, reason \"ordinary edit\", for forward progress: new code, a rename, a changed string or number, formatting, comments, added tests, or extending something that already worked. That is the common answer and it stays silent. When in doubt, answer ok=true.\n\nAnswer ok=false only when the diff plainly takes work back: code removed with nothing put in its place, or one construct swapped for a structurally different one — a class for a function, require for import, an untyped value for a typed one. For that answer, name in the reason what was taken back and what replaced it, then close with: if this followed a correction, offer /ast-grep-rules:lesson before moving on, so the cause is recorded while it is fresh — one entry, and the user decides. The entry belongs in this repo's own friction log and nowhere else; a lesson written to a memory store or a scratch note is not recorded, because /ast-grep-rules:mine never reads those. If that file cannot be written, say so rather than putting the entry somewhere it will not be found.\n\n$ARGUMENTS",
-            "continueOnBlock": true,
-            "timeout": 15,
-            "statusMessage": "checking whether that edit is worth a lesson"
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/friction-gate.mjs\"",
+            "timeout": 5
           }
         ]
       }
