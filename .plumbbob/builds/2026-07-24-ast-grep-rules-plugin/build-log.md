@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log — ast-grep-rules plugin
 
-**Current step:** 17 — fix(ast-grep-rules): close the four gaps the live fires found
+**Current step:** 18 — docs: amend spike-01 with what steps 10 and 16 found
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -39,7 +39,7 @@ check green + checkpoint taken, via `/pb-verify` or `/pb-build`.)*
 - ☑ 14. feat: point /rule and /audit at the cookbook when authoring
 - ☑ 15. docs: add the plugin README and root marketplace table row
 - ☑ 16. chore: verify both loops end to end in a throwaway repo
-- ☐ 17. fix(ast-grep-rules): close the four gaps the live fires found
+- ☑ 17. fix(ast-grep-rules): close the four gaps the live fires found
 - ☐ 18. docs: amend spike-01 with what steps 10 and 16 found
 
 ## Park list
@@ -519,3 +519,4 @@ folder, so it rides the branch into the PR.)*
   three files (rule, fixture, snapshot), never two — D3's contract survived the one place it
   was most likely to slip, an agent under time pressure at the end of a long session.
 - 2026-07-31 — step 16 checkpointed · 78813161f — chore: verify both loops end to end in a throwaway repo (535m)
+- 2026-08-01 — step 17 checkpointed · 63299863d — fix(ast-grep-rules): close the four gaps the live fires found (1 drift, 11m)

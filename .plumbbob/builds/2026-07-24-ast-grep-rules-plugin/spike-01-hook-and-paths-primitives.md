@@ -14,6 +14,10 @@ Record the Verdict before you close the spike (or check off the step).
 
 **Via:** step 2
 **Opened:** 2026-07-25
+**Amended:** 2026-07-31 by step 18 — steps 10 and 16 kept firing these primitives and
+learned three more things about them, recorded under **Amendments** below. The findings
+and verdict above are left as written: they are the record of what step 2 knew when it
+decided.
 **Environment:** Claude Code `2.1.220` (arm64 darwin), throwaway plugin `spikeplug`
 loaded per-session with `--plugin-dir`, driven headless by `claude -p` against a
 scratch project in `/tmp/pb-spike-2/proj`.
@@ -79,6 +83,11 @@ Hooks: Prompt hook condition was not met: SPIKE_REASON_MARKER_7788
 plus `tool_input` (`old_string`/`new_string`) and `tool_response` — including a
 `structuredPatch` with the actual +/- lines. The correction/undo signature D15 wants is
 legible from the payload alone.
+
+> **Narrowed by step 16 — see amendment 6.** Only the *undo* half is. The payload carries
+> `transcript_path`, but a prompt hook has no tools to open it and no transcript prepended
+> (amendment 4), so *"did the user just correct the assistant"* is not legible from this
+> payload or any other.
 
 ### 2. What reaches the model versus the user
 
@@ -154,9 +163,92 @@ condition is not met.
   forced — `continueOnBlock: true`, without which a fired hook *ends the turn* instead of
   offering. Step 10 builds the prompt-hook shape.
 - **D19 (hook-fallback): discharged.** The `type: "command"` fallback is not needed and
-  should not be built.
+  should not be built. *(Still discharged after step 16 — see amendment 6, which bounds
+  what the working primitive can observe without disputing that it works.)*
 - **D12 (glob-gated-lesson): drop the `paths:` key.** It is inert for plugin skills, so
   step 9 should omit it rather than carry frontmatter implying gating that does not happen.
   Discovery for `/lesson` rests on `description:` (D16) and the hook trigger (D8).
 - **Step 10 constraint (new):** the hook's prompt is quoted back to the model verbatim, so
   it must be authored as user-legible text, not an internal gate instruction.
+
+## Amendments
+
+*A spike answers the question that was open when it ran. This one asked whether the
+primitives exist; building on them asked what they can do. Three findings arrived after the
+verdict above was written — two from step 10, which built the hook, and one from step 16,
+which fired it against real friction. Each is stamped with the step that paid for it.*
+
+### 4. `PostToolUse` prompt hooks receive no transcript — that is a `Stop` privilege *(step 10)*
+
+The evaluator is handed **exactly one message**: the prompt, with the hook-input JSON
+substituted for `$ARGUMENTS`. No conversation, and no tools. Only `Stop`/`SubagentStop`
+prepend the transcript to a prompt hook; on `PostToolUse` the `transcript_path` in the
+payload is a string the evaluator has no way to open.
+
+Evidence, against Claude Code `2.1.220`: `--debug-file` reports `Querying model with 1
+messages` on every fire. **And asking the hook does not work as an instrument** — asked
+directly whether it could see the conversation, the evaluator answered *yes*. It
+confabulates about its own context, so the debug log is the only reliable check. This is
+the same shape of trap as the `hook_started` false negative recorded above: two of this
+file's findings now rest on `--debug-file` contradicting a more convenient signal.
+
+Consequence for the artifact: the gate is written to judge one diff and nothing else, and
+the prompt says so in as many words (*"you cannot see the conversation, so do not guess at
+it"*) — otherwise the evaluator invents the dialogue it thinks it has.
+
+### 5. `if:` is a free pre-LLM filter whose brace alternation is silently inert *(step 10)*
+
+`if?` appears in finding 1's schema block but was untested there. It takes
+**permission-rule syntax** and is evaluated **before the model is spawned** — so a
+non-match costs no LLM call at all. That is what upgrades finding 2's "silence on pass is
+free": free of *output*, and now free of *spend* too, which matters because D15 argues an
+eager trigger is worse than silence precisely because it also costs tokens.
+
+The wart: **brace alternation is not expanded**. `Edit(**/*.{ts,tsx})` loads without
+complaint and matches nothing — no validation error, no warning, just a hook that never
+fires. A rule that governs nothing and a rule that finds nothing print identically here
+too.
+
+So the trigger is **four entries** — two tools (`Edit`, `Write`) × two extensions (`.ts`,
+`.tsx`) — each naming exactly one tool and one glob, with the prompt string duplicated
+verbatim because the primitive offers no way to share one. Four copies that must stay
+byte-identical are why step 10 carries `hooks/__tests__/hooks.test.mjs` past its declared
+seam: `hooks.json` takes no comments, so the drift guard and the reasoning both live in
+the test file.
+
+### 6. The gate is conversation-blind, so half of D15's signature is unreachable *(step 16)*
+
+Amendment 4 as a behavioural fact. D15 gave the gate two signatures; step 16's live fire —
+friction induced over four turns in one resumed session, verified from `--debug-file`
+rather than inferred — tested both, and they are not equals.
+
+| turn | edit | verdict | should have been |
+|---|---|---|---|
+| 1 | added a method | `ok:true` *"ordinary edit"* — silent | correct (the common path, free) |
+| 2 | replaced `this.config as any` with a typed `toJSON(): AppConfig`, one turn after the user said that cast was one they keep backing out of this codebase | `ok:true` *"ordinary edit"* — silent | **the fire** |
+| 3 | removed the method outright | `ok:false`, offer delivered | arguably silent |
+
+*"Did the user just correct the assistant"* is **structurally unobservable**. Turn 2 was
+exactly that signature and the gate had nothing to detect it with — not a wording problem,
+since no wording reaches a payload that contains one diff and no dialogue.
+
+*"Did the assistant just undo its own recent change"* **is** observable, and is what
+tripped on turn 3 — but it is a weak proxy, because ordinary iteration and real friction
+produce the same shape of diff. The model receiving the offer said so itself: *"the
+friction worth recording was the `as any` cast"*, and it was right.
+
+So the two verdicts were wrong in opposite directions — silence on the turn that carried
+the friction, a fire on one that did not. Tuning the prompt reaches neither half.
+
+**D19's discharge stands.** Step 2 asked whether the primitive *works*, and the answer is
+still yes: the hook fires from a plugin's `hooks/hooks.json`, `continueOnBlock: true`
+carries the offer to a human, and silence on ordinary edits costs nothing — step 16 proved
+that plumbing end to end, exactly as this spike predicted. What steps 10 and 16 add is the
+primitive's **reach**, not a reversal of its viability: a `PostToolUse` prompt hook can
+judge diffs, and only diffs. That is a fact about the primitive.
+
+What it *does* put back in play is whether a conversation-blind judge is the right judge —
+a question about D8/D15, which step 2 could not have asked because whether prompt hooks fire
+at all was the open question then. A `type: "command"` hook could read `transcript_path`;
+whether it should is a decision, and decisions belong in `/plumbbob:refine`. This file
+records.
