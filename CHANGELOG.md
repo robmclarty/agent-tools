@@ -6,6 +6,12 @@ This project uses [Semantic Versioning](https://semver.org/). The version tracks
 the catalog itself — each listed plugin is versioned independently in its own
 repository or npm package.
 
+## 0.5.0
+
+- `version` 0.2.0: in a repo that keeps its changelog entries under `## Unreleased` (or keep-a-changelog's `## [Unreleased]`), `/version` now promotes that section — renaming the heading in place and adding entries only for commits it doesn't already cover — instead of drafting a duplicate from commit subjects; keep-a-changelog repos get an empty `## [Unreleased]` put back
+- `version`: `/version init` reads the changelog style from the first release heading, past any Unreleased section at the top
+- `ast-grep-rules` 0.2.0: `/rule` can write location rules — conventions about where a file lives, like "unit tests sit in `__tests__/`" — as `kind: program` scoped by `files:`/`ignores:`, with a fixture that holds only `invalid:` cases and a real `scan` of a throwaway tree to prove the globs
+
 ## 0.4.0
 
 - Add `ast-grep-rules` plugin — adaptive structural lint for TypeScript, hosted under `plugins/ast-grep-rules`. Five skills (`/init`, `/audit`, `/rule`, `/lesson`, `/mine`) sit on four zero-dependency scripts that resolve the per-repo contract, own the rules inventory and scan modes, scaffold rule + test-fixture pairs, and install worked examples
