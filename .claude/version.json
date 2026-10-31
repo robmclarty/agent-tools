@@ -3,7 +3,8 @@
     { "type": "json", "path": ".claude-plugin/marketplace.json", "key": "metadata.version" }
   ],
   "marker": {
-    "commit": "v{version}"
+    "commit": "v{version}",
+    "tag": true
   },
   "changelog": {
     "path": "CHANGELOG.md",
