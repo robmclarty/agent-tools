@@ -39,6 +39,8 @@
                                        // e.g. ["chore: bump version to {version}"]
   },
 
+  // A changelog that opens with `## Unreleased` (or `## [Unreleased]`) holding
+  // entries is promoted to the release rather than drafted from commits.
   "changelog": {
     "path": "CHANGELOG.md",            // default
     "style": "sections",               // "sections" | "keep-a-changelog" | "flat"

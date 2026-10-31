@@ -45,7 +45,9 @@ this, one of these is true on disk:
 On a successful bump the JSON carries everything you need: `new` is the authoritative
 version (**never recompute it**), `since` is the SHA of the previous release (the left
 boundary for the changelog commit range; `null` means initial release), `files[]` lists
-every rewrite with per-file `old`/`changed`/`skewed`, and `settings` is the repo config
+every rewrite with per-file `old`/`changed`/`skewed`, `changelog` says whether the
+changelog `exists` and whether its first `##` entry is an Unreleased section to promote
+(`unreleased`: its `line`, `heading`, and `has_entries`, or null), and `settings` is the repo config
 with defaults applied — marker convention, changelog style, verify command, publish
 behavior, and `notes` (path to a repo-local `.claude/version.md`, or null).
 
@@ -84,7 +86,19 @@ behavior, and `notes` (path to a repo-local `.claude/version.md`, or null).
    verify and publish.
 
 5. **Draft the changelog section** in the format `settings.changelog.style` selects,
-   using the JSON's `new` for the version and `date +%Y-%m-%d` for the date:
+   using the JSON's `new` for the version and `date +%Y-%m-%d` for the date.
+
+   **If `changelog.unreleased` is non-null and `has_entries` is true, promote it rather
+   than drafting.** The repo writes its entries as it goes, so they are the release
+   notes: the section is the Unreleased body as written, under the release heading below
+   in place of `changelog.unreleased.heading`. Don't rewrite, reorder, or reword existing
+   entries. Compare the commit range against them, and add an entry only for a commit
+   whose change no entry covers, in the subsection that fits (often `Internal` for
+   tooling or docs), matching the existing entries' voice. If every commit is covered,
+   add nothing. If `has_entries` is false, draft from commits as below and the drafted
+   section takes the empty Unreleased section's place.
+
+   The release heading and subsections, by style:
 
    - `sections`:
 
@@ -128,18 +142,22 @@ behavior, and `notes` (path to a repo-local `.claude/version.md`, or null).
    `since` was `null`, title it as an initial release and summarize the notable
    capabilities as they stand instead of listing all of history.
 
-   **Print the drafted section back to the user** as a fenced `markdown` code block —
+   **Print the drafted (or promoted) section back to the user** as a fenced `markdown` code block —
    the entire block, verbatim, exactly as it will be added to the changelog. This is
    their one chance to read the prose in isolation before it's committed. Continue
    automatically after printing (no wait for confirmation); if the user wants changes,
    they'll interrupt.
 
-6. **Update the changelog** at `settings.changelog.path`. First note whether the file
-   exists (Glob the literal path) — the rollback in step 7 needs this fact. If it
-   exists, insert the new section above the first existing `##` entry, keeping a single
-   `# Changelog` heading (and any preamble) at the top; leave older entries untouched
-   even if they use a different style. If it doesn't exist, create it as
-   `# Changelog` + blank line + the new section.
+6. **Update the changelog** at `settings.changelog.path`. `changelog.exists` says
+   whether the file existed before this step; the rollback in step 7 needs that fact.
+   If `changelog.unreleased` is non-null, replace that section in place: its heading
+   line becomes the release heading, and the body becomes the promoted (or drafted)
+   section. For `keep-a-changelog`, put a fresh empty `## [Unreleased]` heading back
+   above the new release heading, which is that format's convention; the other styles
+   don't keep an empty one. Otherwise, if the file exists, insert the new section above
+   the first existing `##` entry, keeping a single `# Changelog` heading (and any
+   preamble) at the top; leave older entries untouched even if they use a different
+   style. If it doesn't exist, create it as `# Changelog` + blank line + the new section.
 
 7. **Verify before staging** — only if `settings.verify` is non-null. Run it exactly as
    given. A `(version strings + changelog prose)` diff can only fail narrow checks like
@@ -222,8 +240,11 @@ draft `.claude/version.json`, get it approved, write it.
      `last_chore_bump`) → add it to `legacy`. `last_v_tag` present → `"tag": true`,
      and `"tagAuthoritative": true` when tags (not commit messages) are what mark
      releases — e.g. a tag-triggered publish workflow.
-   - `changelog.style` from `existing.changelog.first_heading`: `## [` →
-     `keep-a-changelog`; `## v` with a date → `sections`; bare `## X.Y.Z` → `flat`.
+   - `changelog.style` from `existing.changelog.first_release_heading` (the first `##`
+     heading that isn't an Unreleased section): `## [` → `keep-a-changelog`; `## v`
+     with a date → `sections`; bare `## X.Y.Z` → `flat`. If
+     `existing.changelog.unreleased` is true, the repo writes entries as it goes, and
+     bumps will promote that section; say so when you propose the config.
    - `verify`: only name a command you've confirmed exists (check package.json
      scripts); otherwise `null`.
    - `publish`: pushes require `markers.has_remote`; set `"confirm": true` whenever a
@@ -274,6 +295,9 @@ In every error case: no edits, no git operations, no retry.
 
 - **No prior release** (`since: null`): summarize capabilities as an initial release,
   don't enumerate all history.
+- **An Unreleased section** (`changelog.unreleased` non-null): promote it per step 5. A
+  bespoke skill that drafted from commits may have hidden this habit; the engine's
+  report, not the old skill's prose, says which case the repo is in.
 - **A commit says `BREAKING` or `!:` but the user asked for `patch`/`minor`.** Warn and
   ask whether they meant `major` — never override silently. The bump already happened
   on disk (preflight), so switching means `git restore` of `files[].rel` and

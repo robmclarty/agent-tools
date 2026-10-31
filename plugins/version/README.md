@@ -55,7 +55,10 @@ authoritative version without bumping; leaves changes uncommitted for review):
    previous-release SHA.
 2. The skill summarizes every commit since that SHA into a new changelog
    section, in the style your config selects, and prints it for you to see
-   before it's written.
+   before it's written. If the changelog opens with an Unreleased section
+   (`## Unreleased` or `## [Unreleased]`) that already holds entries, the skill
+   promotes that section to the release instead, adding entries only for
+   commits it doesn't cover.
 3. It runs your narrow verify command (if any), stages exactly the changed
    files, commits with your marker convention, and tags/pushes per config.
 

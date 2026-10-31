@@ -20,7 +20,7 @@
  * Always emits exactly one JSON object to stdout — the skill consumes this
  * directly. The `mode` field tells the caller what happened:
  *
- *   { mode: 'bump',        old, new, since, files: [...], changed_count, skew_healed, settings }
+ *   { mode: 'bump',        old, new, since, files: [...], changed_count, skew_healed, changelog, settings }
  *   { mode: 'repair-skew', old, new,        files: [...], changed_count, settings }
  *   { mode: 'init',        root, existing, candidates, markers }
  *   { mode: 'error',       error_type, message }
@@ -30,6 +30,13 @@
  * else the commit-message patterns built from marker.commit + marker.legacy).
  * The skill uses it as the left boundary for the CHANGELOG commit range; null
  * means no prior release (initial release).
+ *
+ * `changelog` on a successful bump says whether the configured changelog
+ * exists and whether its first `##` entry is an Unreleased section
+ * (`## Unreleased` or keep-a-changelog's `## [Unreleased]`). When it is, the
+ * skill promotes that section to the release instead of drafting a new one
+ * from commit subjects, since a repo that keeps one writes its entries as it
+ * goes.
  *
  * Version targets come from config:
  *   targets[]  — static; the FIRST entry is authoritative (read from), the rest
@@ -58,6 +65,7 @@ const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 const SEMVER_CAPTURE = '(\\d+\\.\\d+\\.\\d+)';
 const CONFIG_REL = '.claude/version.json';
 const NOTES_REL = '.claude/version.md';
+const UNRELEASED_RE = /^##\s+\[?unreleased\]?\s*$/i;
 
 function emit(obj) {
   process.stdout.write(`${JSON.stringify(obj, null, 2)}\n`);
@@ -366,6 +374,32 @@ function settings_for(root, config) {
   };
 }
 
+// The changelog's state as the skill needs it. `unreleased` is non-null when
+// the first `##` heading is an Unreleased section: its 1-based `line`, the
+// `heading` as written, and `has_entries`, true when the section holds any
+// text besides blank lines and `###` subheadings.
+function read_changelog(root, changelog) {
+  const abs = join(root, changelog.path);
+  if (!existsSync(abs)) return { path: changelog.path, exists: false, unreleased: null };
+  const lines = readFileSync(abs, 'utf8').split('\n');
+  const first = lines.findIndex((l) => l.startsWith('## '));
+  if (first === -1 || !UNRELEASED_RE.test(lines[first])) {
+    return { path: changelog.path, exists: true, unreleased: null };
+  }
+  const rest = lines.slice(first + 1);
+  const end = rest.findIndex((l) => l.startsWith('## '));
+  const body = end === -1 ? rest : rest.slice(0, end);
+  return {
+    path: changelog.path,
+    exists: true,
+    unreleased: {
+      line: first + 1,
+      heading: lines[first],
+      has_entries: body.some((l) => l.trim() !== '' && !l.startsWith('#')),
+    },
+  };
+}
+
 // ---------------------------------------------------------------- bump / repair
 
 function run_driver(root, driver, new_version) {
@@ -435,6 +469,7 @@ function mode_bump(root, bump_type) {
     files,
     changed_count: files.filter((f) => f.changed).length,
     skew_healed: files.filter((f) => f.skewed).map((f) => f.rel),
+    changelog: read_changelog(root, config.changelog),
     settings: settings_for(root, config),
   });
 }
@@ -504,9 +539,17 @@ function mode_init(root) {
     changelog: null,
   };
   if (existsSync(join(root, 'CHANGELOG.md'))) {
-    const text = readFileSync(join(root, 'CHANGELOG.md'), 'utf8');
-    const heading = text.split('\n').find((l) => l.startsWith('## '));
-    existing.changelog = { path: 'CHANGELOG.md', first_heading: heading ?? null };
+    const headings = readFileSync(join(root, 'CHANGELOG.md'), 'utf8')
+      .split('\n')
+      .filter((l) => l.startsWith('## '));
+    existing.changelog = {
+      path: 'CHANGELOG.md',
+      first_heading: headings[0] ?? null,
+      // An Unreleased section says nothing about the release heading style,
+      // so style inference reads the first heading that isn't one.
+      first_release_heading: headings.find((l) => !UNRELEASED_RE.test(l)) ?? null,
+      unreleased: headings.length > 0 && UNRELEASED_RE.test(headings[0]),
+    };
   }
 
   const pkg = read_json_quiet(join(root, 'package.json'));
