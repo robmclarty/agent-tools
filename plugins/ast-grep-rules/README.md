@@ -141,7 +141,7 @@ by reference while authoring, never by installing.
 | `no-focused-or-skipped-test` | `constraints:` — capture a metavariable, then narrow it (usually with `regex:`) | a committed `.only`/`.skip` is a defect, not a checkpoint |
 | `no-unlinked-todo` | composite `all:`/`regex:`/`not:` — "this, but not that" | TODOs a tracker can find (`TODO(#123):`) |
 | `no-async-array-callback` | relational `inside:`/`has:` with `stopBy: end` | concurrency written down rather than implied |
-| `no-console-in-packages` | `files:` scoping — a top-level key deciding which files are opened at all | libraries hand information back instead of printing it |
+| `no-console-in-packages` | `files:` scoping — a top-level key deciding which files are opened at all; its note covers location rules, where `kind: program` leaves `files:` to do all the work | libraries hand information back instead of printing it |
 
 Every example ships its fixture and recorded snapshot, and the set is green
 under `ast-grep test`.

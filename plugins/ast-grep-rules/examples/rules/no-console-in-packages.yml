@@ -36,6 +36,15 @@ note: |
       cannot tell you the glob is wrong. Check that with a real `scan` on a file you
       know should be flagged.
 
+  Taken to its limit, `files:` becomes the whole rule. A **location rule** constrains
+  where a file lives rather than what it contains: `rule: { kind: program }` matches
+  every file, so `files:` and `ignores:` alone decide what fires. "Unit tests sit in a
+  `__tests__/` folder beside their code" is `files: ['src/**/*.test.ts']` with
+  `ignores: ['src/**/__tests__/**']`. That is the second mechanic at full strength:
+  every snippet is a program, so the fixture can hold `invalid:` cases but no honest
+  `valid:` one. The test that counts is a real `scan` of a throwaway tree with files
+  on both sides of the line.
+
   Legitimate exception, on the offending line:
 
       console.log(banner) // ast-grep-ignore: no-console-in-packages

@@ -130,6 +130,7 @@ lines; the file itself carries the reasoning.
 | **"This, but not that"** — a broad claim with the sanctioned form carved back out; or the node is a leaf (a comment, a string) with no structure to grip. | `all:` / `any:` / `not:` / `regex:` | `no-unlinked-todo` |
 | **The claim is about context** — where the node sits, or what it contains. "No `await` inside a `forEach` callback." | `inside:` / `has:`, with `stopBy: end` | `no-async-array-callback` |
 | **The convention governs part of the tree** — "packages may not log", "this applies under `src/` only". | top-level `files:`, and `ignores:` | `no-console-in-packages` |
+| **The convention is about where a file lives** — "unit tests sit in `__tests__/`", "no `*.spec.ts`". Nothing inside the file is wrong; its path is. | `kind: program`, with `files:` / `ignores:` doing all the work | `no-console-in-packages` (its note covers location rules) |
 
 Open it with the **Read** tool, at the paths the preflight listing gives for that id:
 `path.rule` for the rule, `path.test` for its fixture. Take both from the JSON rather than
@@ -219,6 +220,11 @@ Replace both placeholder lists with real samples. `invalid:` is every shape the 
 catch; `valid:` is every near-miss it must leave alone — that second list is what catches
 an over-broad rule, and it is the one everybody under-writes. Include the edge cases the
 pattern is most likely to trip on: template literals, generics, `async`, JSX, re-exports.
+
+One exception: a **location rule** (`kind: program`, scoped by `files:` / `ignores:`)
+matches every snippet, so it can take no `valid:` cases. Keep the `invalid:` cases, drop
+`valid:`, and prove the globs with a real `scan` of a throwaway tree that has files on both
+sides of the line. `ast-grep test` never sees a path, so it can't catch a wrong glob.
 
 ```bash
 <ast_grep_command> test
