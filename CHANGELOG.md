@@ -6,6 +6,11 @@ This project uses [Semantic Versioning](https://semver.org/). The version tracks
 the catalog itself — each listed plugin is versioned independently in its own
 repository or npm package.
 
+## 0.5.1
+
+- `commit-with-til` 0.1.1: `/commit` now commits a tracked file that lives under a gitignored directory. `git add` exits 1 on such a path even as it stages the file, and the script used to abort between staging and committing. An untracked path that `.gitignore` excludes is now reported as `(gitignored)` and skipped like any other never-stage match, and the script gained its first tests
+- This catalog's own `/version` config now tags each release and pushes the tag
+
 ## 0.5.0
 
 - `version` 0.2.0: in a repo that keeps its changelog entries under `## Unreleased` (or keep-a-changelog's `## [Unreleased]`), `/version` now promotes that section — renaming the heading in place and adding entries only for commits it doesn't already cover — instead of drafting a duplicate from commit subjects; keep-a-changelog repos get an empty `## [Unreleased]` put back
