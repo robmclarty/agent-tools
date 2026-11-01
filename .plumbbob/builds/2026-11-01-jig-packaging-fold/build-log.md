@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log: jig packaging fold
 
-**Current step:** 1 — chore(jig): fold version and commit-with-til into one plugin
+**Current step:** 2 — docs(jig): state what jig admits and how to migrate
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -23,7 +23,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 line above. Only ONE step is in flight; a step is done only after a checkpoint:
 check green + checkpoint taken, via `/plumbbob:verify` or `/plumbbob:build`.)*
 
-- ☐ 1. chore(jig): fold version and commit-with-til into one plugin
+- ☑ 1. chore(jig): fold version and commit-with-til into one plugin
 - ☐ 2. docs(jig): state what jig admits and how to migrate
 - ☐ 3. test(jig): enforce the admission rule with a node test
 
@@ -34,6 +34,8 @@ check green + checkpoint taken, via `/plumbbob:verify` or `/plumbbob:build`.)*
 > Capture is one line (`/plumbbob:park` composes it). Harvest happens only at the boundary.
 
 - [ ] jig ships no plugin icon: claude plugin validate warns ICON_MISSING for the plugin directory listing (a square PNG at .claude-plugin/icon.png would clear it)
+- [ ] jig README states the admission rule but does not point at the admission test that enforces it: step 3 lands after step 2 and its seam is the test file alone, so a one-line pointer would need a later docs edit
+- [ ] three bare /version strings survive under plugins/jig/ in files C1 (no-engine-change) and D3 (pure-renames) freeze: bump.mjs line 3 (header comment) and line 177 (the config error tells the user to run /version init), and the template's line 1 comment; the C9 grep over docs is clean, so this waits for the v2 engine build
 
 ## Harvest  *(run `/plumbbob:harvest` at each step boundary, after green)*
 
@@ -70,3 +72,5 @@ folder, so it rides the branch into the PR.)*
   **1.** What the refine settled (Open questions Q1 to Q7, all resolved 2026-11-01)
 
   The cold read's two findings became Q4 and Q5 under `/plumbbob:refine` and are closed: the plugin README, the root README, and both SKILL.md files name `/jig:version` and `/jig:commit` only, with no bare-name note, since bare `/version` never resolved ([D14 (namespaced-names)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d14)); and the root README changes in step 1 with the marketplace, so no commit carries docs behind its manifest ([D15 (root-readme-in-step-1)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d15)). The refine also widened the ambient clause to agents and LSP servers, in the README and the test ([D13 (ambient-list)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d13)), pinned the test's scratch copies to `os.tmpdir()` and its frontmatter-only read ([D9 (rule-is-tested)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d9)), set the start version at 0.2.0 ([D12 (carry-version)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d12)), and gated step 1 on the work-marketplace name check ([D11 (name-check-first)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d11)). Step 2's title and seam shrank to the plugin README alone, and C9 makes the namespaced-only rule a constraint `/plumbbob:verify` can grep for.
+
+- 2026-11-01 — step 1 checkpointed · 97fe3bd82 — chore(jig): fold version and commit-with-til into one plugin (4m)
