@@ -34,6 +34,9 @@ function scratch_repo() {
   mkdirSync(join(root, 'research'));
   writeFileSync(join(root, 'research/a.md'), 'a\n');
   writeFileSync(join(root, 'src.txt'), 'src\n');
+  mkdirSync(join(root, 'lib'));
+  writeFileSync(join(root, 'lib/one.txt'), 'one\n');
+  writeFileSync(join(root, 'lib/two.txt'), 'two\n');
   git(root, 'add', '-A');
   git(root, 'commit', '-q', '-m', 'initial');
   writeFileSync(join(root, '.gitignore'), 'research/\n');
@@ -104,6 +107,56 @@ test('the never-stage filter still skips a secret and commits the rest', () => {
     assert.equal(commit_count(root), 3);
     assert.equal(git(root, 'show', 'HEAD:src.txt'), 'src2');
     assert.equal(git(root, 'ls-files', '.env'), '');
+  });
+});
+
+// Paths are literal pathspecs. A glob or `:/` prefix that reaches the script
+// unexpanded must name a nonexistent file, not a set the per-file filter never
+// saw and that `git add -f` would then force past .gitignore.
+
+test('a directory argument still expands to its files and commits them', () => {
+  with_repo((root) => {
+    writeFileSync(join(root, 'lib/one.txt'), 'one2\n');
+    writeFileSync(join(root, 'lib/two.txt'), 'two2\n');
+    const r = run(root, ['lib']);
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(commit_count(root), 3);
+    assert.equal(git(root, 'show', 'HEAD:lib/one.txt'), 'one2');
+    assert.equal(git(root, 'show', 'HEAD:lib/two.txt'), 'two2');
+  });
+});
+
+test('a glob argument is a literal path, so it stages nothing it matches', () => {
+  with_repo((root) => {
+    writeFileSync(join(root, 'research/a.md'), 'a2\n');
+    writeFileSync(join(root, 'research/new.md'), 'new\n');
+    // spawnSync runs no shell, so the asterisk arrives unexpanded, as a quoted
+    // argument would.
+    const r = run(root, ['research/*']);
+    assert.notEqual(r.status, 0);
+    assert.equal(commit_count(root), 2);
+    assert.equal(git(root, 'diff', '--cached', '--name-only'), '');
+    assert.equal(git(root, 'ls-files', 'research/new.md'), '');
+  });
+});
+
+test('pathspec magic is a literal path too', () => {
+  with_repo((root) => {
+    writeFileSync(join(root, 'src.txt'), 'src2\n');
+    const r = run(root, [':/src.txt']);
+    assert.notEqual(r.status, 0);
+    assert.equal(commit_count(root), 2);
+    assert.equal(git(root, 'diff', '--cached', '--name-only'), '');
+  });
+});
+
+test('a ./-prefixed tracked file under a gitignored directory still commits', () => {
+  with_repo((root) => {
+    writeFileSync(join(root, 'research/a.md'), 'a2\n');
+    const r = run(root, ['./research/a.md']);
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(commit_count(root), 3);
+    assert.equal(git(root, 'show', 'HEAD:research/a.md'), 'a2');
   });
 });
 

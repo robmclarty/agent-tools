@@ -1,6 +1,6 @@
 {
   "name": "commit-with-til",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Conventional commits with TIL extraction for code-diary — a deterministic never-stage filter script plus a one-tool-call /commit skill.",
   "author": {
     "name": "Rob McLarty",

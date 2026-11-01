@@ -14,7 +14,10 @@
 # (`<<'COMMIT_MSG'`) so apostrophes, backticks, and `$` in the body pass
 # through literally — no shell escaping needed.
 #
-# Each positional arg is a path to stage. Directory args are expanded to
+# Each positional arg is a path to stage, taken literally: the script exports
+# GIT_LITERAL_PATHSPECS=1, so a glob or `:(magic)` that reaches it unexpanded
+# names a file that doesn't exist, never a set of files the filter below
+# didn't see. Directory args are expanded to
 # the set of tracked + untracked-not-ignored files under them via
 # `git ls-files`, so passing a directory works the same as passing every
 # file inside it. Each resulting file is checked against the never-stage
@@ -45,6 +48,13 @@
 # Otherwise exits non-zero without committing.
 
 set -euo pipefail
+
+# Every git call below takes a user-supplied path. Literal pathspecs mean that
+# path is the one file the filter checked: no `*` expanding past it, no `:/` or
+# `:(glob)` magic, so neither the never-stage rules nor the `-f` in the staging
+# step can be steered onto files they never saw. One call opts back out, with
+# the reason given there: `git check-ignore`.
+export GIT_LITERAL_PATHSPECS=1
 
 block_binary=0
 while [[ $# -gt 0 ]]; do
@@ -137,7 +147,11 @@ for p in "${expanded[@]}"; do
   # report it and move on, rather than let `git add` exit 1 and abort the whole
   # commit. Tracked files are exempt, because git ignores only what it doesn't
   # track and `git check-ignore` agrees, so this never skips a tracked file.
-  if git check-ignore -q -- "$p"; then
+  # check-ignore refuses literal pathspecs outright ("pathspec magic not
+  # supported"), so it alone runs with them off. It only decides whether to
+  # skip; staging stays literal, so a path it fails to classify is refused by
+  # `git add` below rather than staged.
+  if GIT_LITERAL_PATHSPECS=0 git check-ignore -q -- "$p"; then
     skipped+=("$p (gitignored)")
     continue
   fi
@@ -187,10 +201,19 @@ fi
 # already holds. Untracked paths get a plain `git add`, so .gitignore keeps
 # deciding for anything new (the filter above has already skipped the ignored
 # ones).
+# A path counts as tracked only when it is not a directory on disk and names
+# exactly one index entry. With literal pathspecs that entry is the path itself,
+# so `git add -f` can stage that one file (or its deletion) and nothing else:
+# never a directory's ignored contents, never a pattern's matches.
+is_tracked_file() {
+  [[ ! -d "$1" ]] || return 1
+  [[ "$(git ls-files --cached -- "$1" | wc -l | tr -d ' ')" == 1 ]]
+}
+
 declare -a tracked=()
 declare -a untracked=()
 for p in "${to_stage[@]}"; do
-  if git ls-files --error-unmatch -- "$p" >/dev/null 2>&1; then
+  if is_tracked_file "$p"; then
     tracked+=("$p")
   else
     untracked+=("$p")

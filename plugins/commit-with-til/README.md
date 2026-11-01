@@ -45,6 +45,9 @@ no escaping of the body.
 
 ### Never-stage filter
 
+Paths are taken literally (`GIT_LITERAL_PATHSPECS=1`): no globs, no `:(magic)`, so
+the filter always sees the exact file git will stage.
+
 The script skips (and reports on stderr) paths matching:
 
 - **secrets** — `.env` / `.env.*` (except `.env.example`, `.env.sample`),
