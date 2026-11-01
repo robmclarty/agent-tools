@@ -26,6 +26,9 @@
 #              *.token, token.json, tokens.json
 #              credentials*, *-credentials*
 #   logs       *.log
+#   gitignored untracked paths that .gitignore excludes. A tracked file under
+#              an ignored directory is not ignored and still stages (see the
+#              staging step at the bottom).
 #   binary     ONLY when --block-binary is passed (default: allow). The
 #              `grep -I` heuristic mis-flags Playwright snapshot PNGs,
 #              ML model fixtures, fonts, and other intentional commit
@@ -35,8 +38,9 @@
 #   oversize   files larger than 1 MB
 #   empty dir  directory expanded to no stageable files
 #
-# If at least one path survives the filter and stdin is non-empty, runs:
-#   git add -- <survivors>
+# If at least one path survives the filter and stdin is non-empty, stages the
+# survivors in two passes (`git add -f -- <tracked>`, `git add -- <untracked>`;
+# the staging step at the bottom says why) and runs:
 #   git commit -F - (with the stdin message)
 # Otherwise exits non-zero without committing.
 
@@ -129,6 +133,15 @@ for p in "${expanded[@]}"; do
     continue
   fi
 
+  # An untracked path that .gitignore excludes is one more never-stage rule:
+  # report it and move on, rather than let `git add` exit 1 and abort the whole
+  # commit. Tracked files are exempt, because git ignores only what it doesn't
+  # track and `git check-ignore` agrees, so this never skips a tracked file.
+  if git check-ignore -q -- "$p"; then
+    skipped+=("$p (gitignored)")
+    continue
+  fi
+
   # Nonexistent path: defer to git for the error message.
   if [[ ! -e "$p" ]]; then
     to_stage+=("$p")
@@ -167,5 +180,26 @@ if (( ${#to_stage[@]} == 0 )); then
   exit 1
 fi
 
-git add -- "${to_stage[@]}"
+# Stage in two passes. git ignores only what it doesn't track, so a tracked
+# file under a gitignored directory is a legitimate target; but `git add` still
+# exits 1 on the ignored pathspec even as it stages the file (git 2.50), and
+# `set -e` would abort before the commit. `-f` is safe for paths the index
+# already holds. Untracked paths get a plain `git add`, so .gitignore keeps
+# deciding for anything new (the filter above has already skipped the ignored
+# ones).
+declare -a tracked=()
+declare -a untracked=()
+for p in "${to_stage[@]}"; do
+  if git ls-files --error-unmatch -- "$p" >/dev/null 2>&1; then
+    tracked+=("$p")
+  else
+    untracked+=("$p")
+  fi
+done
+if (( ${#tracked[@]} > 0 )); then
+  git add -f -- "${tracked[@]}"
+fi
+if (( ${#untracked[@]} > 0 )); then
+  git add -- "${untracked[@]}"
+fi
 printf '%s\n' "$msg" | git commit -F -

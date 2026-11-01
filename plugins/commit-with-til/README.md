@@ -50,6 +50,8 @@ The script skips (and reports on stderr) paths matching:
 - **secrets** — `.env` / `.env.*` (except `.env.example`, `.env.sample`),
   `*.pem`, `*.key`, `*.secret`, `*.token`, `token(s).json`, `*credentials*`
 - **logs** — `*.log`
+- **gitignored** — untracked paths that `.gitignore` excludes (a tracked file
+  under an ignored directory is not ignored, and still stages)
 - **oversize** — files larger than 1 MB
 - **binary** — only with `--block-binary` (off by default, since the heuristic
   mis-flags legitimate committed binaries like snapshots and fixtures)
