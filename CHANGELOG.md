@@ -6,6 +6,10 @@ This project uses [Semantic Versioning](https://semver.org/). The version tracks
 the catalog itself — each listed plugin is versioned independently in its own
 repository or npm package.
 
+## 0.5.2
+
+- `commit-with-til` 0.1.2: paths are taken literally (`GIT_LITERAL_PATHSPECS=1`), so a glob or `:/` pathspec that reaches `/commit` unexpanded names a file that doesn't exist instead of a set of files the never-stage filter never checked, and `git add -f` can only ever touch a file the index already holds. Found by the push security review; 0.1.1 shipped with the hole
+
 ## 0.5.1
 
 - `commit-with-til` 0.1.1: `/commit` now commits a tracked file that lives under a gitignored directory. `git add` exits 1 on such a path even as it stages the file, and the script used to abort between staging and committing. An untracked path that `.gitignore` excludes is now reported as `(gitignored)` and skipped like any other never-stage match, and the script gained its first tests
