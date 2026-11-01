@@ -3,6 +3,10 @@
 _2026-07-19. Inventory and analysis of every bespoke `/version` skill on this machine,
 done as groundwork for a single portable `/version` plugin hosted in this marketplace._
 
+_2026-11-01: the inventory below is the July state. A later survey, summarized in
+[`specs/version-v2.md`](specs/version-v2.md) §Field evidence, found 27 bespoke skills (20
+distinct texts), 16 of them in repos no longer maintained._
+
 ## Summary
 
 Twelve `/version` skills exist across the project repos. They fall into three clear

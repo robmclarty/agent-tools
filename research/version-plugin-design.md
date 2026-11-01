@@ -4,6 +4,11 @@ _2026-07-19. Design for a single installable `/version` plugin that replaces the
 bespoke per-repo skills. Companion to [version-skills-survey.md](version-skills-survey.md),
 which derives the requirements empirically from the existing skills._
 
+_**Superseded in part, 2026-11-01:** [`specs/version-v2.md`](specs/version-v2.md) revises
+the architecture (a plan/finish/push split, config v2, prereleases, voice from hand-owned
+exemplars) and moves the plugin into `jig`. Where the two disagree, v2 wins; the "Scope
+decisions" below (lockstep only, no prereleases) no longer hold._
+
 ## Goal
 
 One plugin, installed from this marketplace, that works in any repo — npm single-package,
