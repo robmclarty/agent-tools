@@ -13,7 +13,7 @@ step boundaries. The antidote to "my plan got lost in the noise."
 
 # Build log: jig packaging fold
 
-**Current step:** 2 — docs(jig): state what jig admits and how to migrate
+**Current step:** 3 — test(jig): enforce the admission rule with a node test
 **Heavy check:** checkride (set a "check" key in .plumbbob/settings.json to override)
 
 ## Steps
@@ -24,7 +24,7 @@ line above. Only ONE step is in flight; a step is done only after a checkpoint:
 check green + checkpoint taken, via `/plumbbob:verify` or `/plumbbob:build`.)*
 
 - ☑ 1. chore(jig): fold version and commit-with-til into one plugin
-- ☐ 2. docs(jig): state what jig admits and how to migrate
+- ☑ 2. docs(jig): state what jig admits and how to migrate
 - ☐ 3. test(jig): enforce the admission rule with a node test
 
 ## Park list
@@ -74,3 +74,4 @@ folder, so it rides the branch into the PR.)*
   The cold read's two findings became Q4 and Q5 under `/plumbbob:refine` and are closed: the plugin README, the root README, and both SKILL.md files name `/jig:version` and `/jig:commit` only, with no bare-name note, since bare `/version` never resolved ([D14 (namespaced-names)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d14)); and the root README changes in step 1 with the marketplace, so no commit carries docs behind its manifest ([D15 (root-readme-in-step-1)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d15)). The refine also widened the ambient clause to agents and LSP servers, in the README and the test ([D13 (ambient-list)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d13)), pinned the test's scratch copies to `os.tmpdir()` and its frontmatter-only read ([D9 (rule-is-tested)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d9)), set the start version at 0.2.0 ([D12 (carry-version)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d12)), and gated step 1 on the work-marketplace name check ([D11 (name-check-first)](../../.plumbbob/builds/2026-11-01-jig-packaging-fold/intent.md#d11)). Step 2's title and seam shrank to the plugin README alone, and C9 makes the namespaced-only rule a constraint `/plumbbob:verify` can grep for.
 
 - 2026-11-01 — step 1 checkpointed · 97fe3bd82 — chore(jig): fold version and commit-with-til into one plugin (4m)
+- 2026-11-01 — step 2 checkpointed · aea8a0aa9 — docs(jig): state what jig admits and how to migrate (4m)
