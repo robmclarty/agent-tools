@@ -3,7 +3,7 @@ name: version
 description: Bump the project version via the config-driven bump engine, summarize every commit since the last release into a CHANGELOG section, and commit/tag/push per the repo's .claude/version.json. Also supports `init` to generate that config (migrating any existing bespoke version skill) and `--repair-skew` to realign version files without bumping. Use when cutting a release.
 argument-hint: "[major|minor|patch | --repair-skew | init]"
 disable-model-invocation: true
-allowed-tools: Read, Edit, Write, Glob, Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/bump.mjs*), Bash(git log*), Bash(git diff*), Bash(git describe*), Bash(git status*), Bash(git add *), Bash(git commit *), Bash(git tag *), Bash(git push origin *), Bash(git ls-remote*), Bash(git restore *), Bash(node -e *), Bash(date *), Bash(cat *)
+allowed-tools: Read, Edit, Write, Glob, Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/version/bump.mjs*), Bash(git log*), Bash(git diff*), Bash(git describe*), Bash(git status*), Bash(git add *), Bash(git commit *), Bash(git tag *), Bash(git push origin *), Bash(git ls-remote*), Bash(git restore *), Bash(node -e *), Bash(date *), Bash(cat *)
 ---
 
 # version
@@ -32,7 +32,7 @@ No default; fail fast on anything else.
 
 ## Preflight context
 
-- Engine result: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/bump.mjs $ARGUMENTS`
+- Engine result: !`node ${CLAUDE_PLUGIN_ROOT}/scripts/version/bump.mjs $ARGUMENTS`
 
 The engine runs *first*, before the skill reasons about anything. By the time you read
 this, one of these is true on disk:
@@ -257,11 +257,11 @@ draft `.claude/version.json`, get it approved, write it.
    the plugin: config generation is judgment, so the user signs off.
 
 5. **Wrap up.** If a bespoke skill was migrated, recommend deleting its directory so
-   `/version` resolves to this plugin alone — offer to do it. If `verify` is set,
+   the repo has one release path, `/jig:version` — offer to do it. If `verify` is set,
    suggest allowlisting that command in the repo's `.claude/settings.json` to avoid a
    permission prompt on each release. Suggest a dry read of the config via
-   `/version --repair-skew` (harmless when nothing is skewed) or going straight to the
-   first real `/version patch`.
+   `/jig:version --repair-skew` (harmless when nothing is skewed) or going straight to
+   the first real `/jig:version patch`.
 
 ## Steps — error
 
@@ -269,7 +269,7 @@ The engine made no changes. Branch on `error_type`:
 
 - `dirty_tree` → a release commit must contain only the bump + changelog. Show the
   dirty files; suggest committing or stashing first; stop.
-- `config` → no or invalid `.claude/version.json`. Suggest `/version init`; stop.
+- `config` → no or invalid `.claude/version.json`. Suggest `/jig:version init`; stop.
 - `usage` → relay the message verbatim; stop.
 - `runtime` → relay the message and stop. Don't speculate or retry. (A "does not
   contain a matching line" message means a file declared intent to participate but
@@ -282,8 +282,8 @@ In every error case: no edits, no git operations, no retry.
 
 - Cutting a release, even an internal one (`patch`/`minor`/`major`).
 - The user asks to "bump the version", "cut a release", or "tag a new version".
-- Setting up a repo: `/version init`.
-- Recovering from version drift across files: `/version --repair-skew`.
+- Setting up a repo: `/jig:version init`.
+- Recovering from version drift across files: `/jig:version --repair-skew`.
 
 ## When NOT to use this skill
 
@@ -301,7 +301,7 @@ In every error case: no edits, no git operations, no retry.
 - **A commit says `BREAKING` or `!:` but the user asked for `patch`/`minor`.** Warn and
   ask whether they meant `major` — never override silently. The bump already happened
   on disk (preflight), so switching means `git restore` of `files[].rel` and
-  re-invoking `/version major`.
+  re-invoking `/jig:version major`.
 - **Changelog exists but has no `# Changelog` heading.** Prepend the heading plus the
   new section; leave old content untouched.
 - **Merge commits in the range.** Drop them from the summary unless they introduced

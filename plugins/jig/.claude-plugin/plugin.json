@@ -1,7 +1,7 @@
 {
-  "name": "version",
+  "name": "jig",
   "version": "0.2.0",
-  "description": "Portable /version release skill — a deterministic, config-driven bump engine plus one invariant workflow that adapts to any repo via .claude/version.json.",
+  "description": "Guided per-repo workflows: /jig:version cuts a release from .claude/version.json and /jig:commit lands a conventional commit through a never-stage filter. User-invoked, script-backed skills only; nothing ambient.",
   "author": {
     "name": "Rob McLarty",
     "email": "hello@robmclarty.com",
@@ -16,6 +16,11 @@
     "bump",
     "monorepo",
     "lockstep",
+    "commit",
+    "conventional-commits",
+    "til",
+    "code-diary",
+    "git",
     "claude-code"
   ],
   "homepage": "https://github.com/robmclarty/agent-tools",

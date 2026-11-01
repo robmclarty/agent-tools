@@ -30,9 +30,9 @@
       "repository": "https://github.com/robmclarty/plumbbob"
     },
     {
-      "name": "version",
-      "source": "./plugins/version",
-      "description": "Portable /version release skill — a deterministic, config-driven bump engine plus one invariant workflow that adapts to any repo via .claude/version.json.",
+      "name": "jig",
+      "source": "./plugins/jig",
+      "description": "Guided per-repo workflows: /jig:version cuts a release from .claude/version.json and /jig:commit lands a conventional commit through a never-stage filter. User-invoked, script-backed skills only; nothing ambient.",
       "license": "MIT",
       "category": "development",
       "keywords": [
@@ -42,7 +42,12 @@
         "changelog",
         "bump",
         "monorepo",
-        "lockstep"
+        "lockstep",
+        "commit",
+        "conventional-commits",
+        "til",
+        "code-diary",
+        "git"
       ],
       "homepage": "https://github.com/robmclarty/agent-tools",
       "repository": "https://github.com/robmclarty/agent-tools"
@@ -60,22 +65,6 @@
         "conventions",
         "rules",
         "typescript"
-      ],
-      "homepage": "https://github.com/robmclarty/agent-tools",
-      "repository": "https://github.com/robmclarty/agent-tools"
-    },
-    {
-      "name": "commit-with-til",
-      "source": "./plugins/commit-with-til",
-      "description": "Conventional commits with TIL extraction for code-diary — a deterministic never-stage filter script plus a one-tool-call /commit skill.",
-      "license": "MIT",
-      "category": "development",
-      "keywords": [
-        "commit",
-        "conventional-commits",
-        "til",
-        "code-diary",
-        "git"
       ],
       "homepage": "https://github.com/robmclarty/agent-tools",
       "repository": "https://github.com/robmclarty/agent-tools"

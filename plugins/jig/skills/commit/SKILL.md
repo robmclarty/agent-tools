@@ -3,12 +3,12 @@ name: commit
 description: Creates a conventional commit with TIL extraction for code-diary. The commit message uses code-diary's categorization format; learning moments become TIL: entries that code-diary's parser extracts.
 argument-hint: [optional scope or context]
 disable-model-invocation: true
-allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/commit.sh *) Bash(git status *)
+allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/commit/commit.sh *) Bash(git status *)
 ---
 
 # Commit with TIL Extraction
 
-Repository state is pre-loaded below. Compose a conventional commit message and hand off staging + committing to the plugin's `scripts/commit.sh`, which enforces the never-stage filter deterministically.
+Repository state is pre-loaded below. Compose a conventional commit message and hand off staging + committing to the plugin's `scripts/commit/commit.sh`, which enforces the never-stage filter deterministically.
 
 ## Repository state (pre-loaded)
 
@@ -32,13 +32,13 @@ One tool call (`Bash`):
 
 1. From the diffs above, determine what changed and why. Pick the set of paths that belong in this commit. Apply judgment: if there are multiple unrelated changes, prefer to commit only one logical group and leave the rest unstaged for a follow-up commit.
 2. Compose the message: `type(scope): lowercase imperative summary`. Recognized types: `feat|fix|refactor|docs|chore|test|style|perf|build|ci`. Add a body if it adds context the diff doesn't make obvious. Scan for TIL opportunities (rules below) and append `TIL:` lines.
-3. **Run** `${CLAUDE_PLUGIN_ROOT}/scripts/commit.sh <path>...` with the commit message piped on stdin via a single-quoted heredoc (`<<'COMMIT_MSG'`). The script filters never-stage matches, stages survivors, and commits. Do not ask for confirmation — the user invoked `/commit` to commit.
+3. **Run** `${CLAUDE_PLUGIN_ROOT}/scripts/commit/commit.sh <path>...` with the commit message piped on stdin via a single-quoted heredoc (`<<'COMMIT_MSG'`). The script filters never-stage matches, stages survivors, and commits. Do not ask for confirmation — the user invoked `/jig:commit` to commit.
 
 If `$ARGUMENTS` is non-empty, use it as scope/context input for the message.
 
 ### What the script handles for you
 
-`scripts/commit.sh` is the deterministic guard. You don't need to second-guess its filter list — pass any path that you'd plausibly want to commit, and it will skip files matching the never-stage rules and report what it skipped on stderr. The filter rules are documented at the top of the script.
+`scripts/commit/commit.sh` is the deterministic guard. You don't need to second-guess its filter list — pass any path that you'd plausibly want to commit, and it will skip files matching the never-stage rules and report what it skipped on stderr. The filter rules are documented at the top of the script.
 
 ### Why a single-quoted stdin heredoc
 
@@ -76,12 +76,12 @@ code-diary's parser extracts TILs via `line.indexOf("TIL:")` and takes everythin
 - **Pre-commit hook failure**: the commit did not happen. Fix the issue, then re-run the script to create a NEW commit. Never `--amend` after a hook failure.
 - **Script exits non-zero with "no paths survived the never-stage filter"**: every path you passed was filtered. Tell the user what was skipped (the script prints reasons on stderr) and stop.
 - **Script exits non-zero with "commit message on stdin is empty"**: the heredoc body was empty or whitespace-only. Re-invoke with the message body filled in.
-- **Path you believe should be committed got skipped**: if the never-stage filter is wrong for this case, tell the user — the fix belongs in the plugin's `scripts/commit.sh` (in the agent-tools marketplace repo), not in a one-off workaround.
+- **Path you believe should be committed got skipped**: if the never-stage filter is wrong for this case, tell the user — the fix belongs in the plugin's `scripts/commit/commit.sh` (in the agent-tools marketplace repo), not in a one-off workaround.
 
 ## Example
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/commit.sh src/timezone.ts test/timezone.test.ts <<'COMMIT_MSG'
+${CLAUDE_PLUGIN_ROOT}/scripts/commit/commit.sh src/timezone.ts test/timezone.test.ts <<'COMMIT_MSG'
 fix(internal-tools): handle timezone offsets with half-hour increments
 
 India Standard Time (+0530) and similar half-hour offsets were being
