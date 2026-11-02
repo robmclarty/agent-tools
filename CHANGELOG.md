@@ -6,6 +6,12 @@ This project uses [Semantic Versioning](https://semver.org/). The version tracks
 the catalog itself — each listed plugin is versioned independently in its own
 repository or npm package.
 
+## 0.6.0
+
+- `jig` 0.2.0: `version` and `commit-with-til` are now one plugin, `jig`, installed as `jig@robmclarty` and invoked as `/jig:version` and `/jig:commit`. The release engine, the commit script, their tests, and the config template moved byte-identical with history following, so neither skill behaves differently and every repo's `.claude/version.json` works as it did
+- `jig` admits a skill that is user-invoked only, per-repo, script-backed, and ambient-free (no hooks, MCP servers, LSP servers, agents, monitors, or `bin/`). The plugin README opens with that rule, and a node test enforces its two checkable clauses by proving each failure against a scratch copy of the plugin
+- The `version` and `commit-with-til` entries leave the catalog, which now lists three plugins. Swap installs in one sitting: uninstall both, then install `jig@robmclarty`; the plugin README's Migrating section has the steps
+
 ## 0.5.2
 
 - `commit-with-til` 0.1.2: paths are taken literally (`GIT_LITERAL_PATHSPECS=1`), so a glob or `:/` pathspec that reaches `/commit` unexpanded names a file that doesn't exist instead of a set of files the never-stage filter never checked, and `git add -f` can only ever touch a file the index already holds. Found by the push security review; 0.1.1 shipped with the hole
